@@ -1,79 +1,156 @@
 import { create } from 'zustand';
+import { ChatStoreState, Conversation, Message } from '@/types';
+import {
+  createConversation,
+  addMessageToConversation,
+  fetchUserConversations,
+  fetchConversationMessages,
+  googleAiResponse,
+} from './actions';
 
-interface Message {
-  id: string;
-  content: string;
-  role: 'user' | 'assistant';
-  chatId: string;
+interface ChatStore extends ChatStoreState {
+  // Conversation actions
+  selectConversation: (conversation: Conversation) => void;
+  createNewConversation: (title: string) => Promise<void>;
+  loadUserConversations: () => Promise<void>;
+  // Message actions
+  sendMessage: (content: string) => Promise<void>;
+  loadConversationMessages: (conversationId: string) => Promise<void>;
+  // Error handling
+  setError: (error: string | null) => void;
 }
 
-interface Chat {
-  id: string;
-  title: string;
-}
+export const useChatStore = create<ChatStore>((set, get) => ({
+  // Initial state
+  conversations: [],
+  selectedConversation: null,
+  isLoading: false,
+  error: null,
 
-interface ChatStore {
-  chats: Chat[];
-  selectedChat: Chat | null;
-  messages: Record<string, Message[]>;
-  setSelectedChat: (chat: Chat) => void;
-  addChat: (title: string) => void;
-  addMessage: (
-    content: string,
-    role: 'user' | 'assistant',
-    chatId: string
-  ) => void;
-}
+  // Basic actions
+  setError: (error) => set({ error }),
 
-export const useChatStore = create<ChatStore>((set) => ({
-  chats: [
-    { id: '1', title: 'Getting started with React' },
-    { id: '2', title: 'Learning TypeScript basics' },
-    { id: '3', title: 'Next.js project structure' },
-  ],
-  selectedChat: { id: '1', title: 'Getting started with React' },
-  messages: {
-    '1': [
-      {
-        id: '1',
-        content: 'Hello! How can I help you today?',
-        role: 'assistant',
-        chatId: '1',
-      },
-    ],
-    '2': [],
-    '3': [],
+  // Conversation actions
+  selectConversation: (conversation) =>
+    set({ selectedConversation: conversation }),
+
+  createNewConversation: async (title) => {
+    set({ isLoading: true, error: null });
+
+    const response = await createConversation(title);
+
+    if (response.error) {
+      set({ error: response.error, isLoading: false });
+      return;
+    }
+
+    if (response.data) {
+      set((state) => ({
+        conversations: [...state.conversations, response.data!],
+        selectedConversation: response.data,
+        isLoading: false,
+      }));
+    }
   },
-  setSelectedChat: (chat) => set({ selectedChat: chat }),
-  addChat: (title) =>
-    set((state) => {
-      const newChat = {
-        id: String(state.chats.length + 1),
-        title,
-      };
-      return {
-        chats: [...state.chats, newChat],
-        selectedChat: newChat,
-        messages: {
-          ...state.messages,
-          [newChat.id]: [],
-        },
-      };
-    }),
-  addMessage: (content, role, chatId) =>
-    set((state) => {
-      const newMessage = {
-        id: String(Date.now()),
-        content,
-        role,
-        chatId,
-      };
 
-      return {
-        messages: {
-          ...state.messages,
-          [chatId]: [...(state.messages[chatId] || []), newMessage],
-        },
-      };
-    }),
+  loadUserConversations: async () => {
+    set({ isLoading: true, error: null });
+
+    const response = await fetchUserConversations();
+
+    if (response.error) {
+      set({ error: response.error, isLoading: false });
+      return;
+    }
+
+    if (response.data) {
+      set({
+        conversations: response.data,
+        isLoading: false,
+      });
+    }
+  },
+
+  // Message actions
+  sendMessage: async (content) => {
+    const { selectedConversation } = get();
+    if (!selectedConversation) {
+      set({ error: 'No conversation selected' });
+      return;
+    }
+
+    set({ isLoading: true, error: null });
+
+    try {
+      // Send user message
+      const userMessageResponse = await addMessageToConversation(
+        selectedConversation.id,
+        content,
+        'user'
+      );
+
+      if (userMessageResponse.error) {
+        set({ error: userMessageResponse.error });
+        return;
+      }
+
+      // Update local state with user message
+      const updatedMessages = [...selectedConversation.messages];
+      if (userMessageResponse.data) {
+        updatedMessages.push(userMessageResponse.data);
+      }
+
+      // TODO: Integrate with your AI service here
+      const aiResponse = await googleAiResponse(content);
+      if (!aiResponse) {
+        set({ error: 'response denied!!!' });
+        return;
+      }
+      // Save AI response
+      const assistantMessageResponse = await addMessageToConversation(
+        selectedConversation.id,
+        aiResponse,
+        'assistant'
+      );
+      if (assistantMessageResponse.data) {
+        updatedMessages.push(assistantMessageResponse.data);
+      }
+      // Update conversation with new messages
+      set((state) => ({
+        selectedConversation: state.selectedConversation
+          ? {
+              ...state.selectedConversation,
+              messages: updatedMessages,
+            }
+          : null,
+      }));
+    } catch (error) {
+      set({ error: 'Failed to send message' });
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  loadConversationMessages: async (conversationId) => {
+    set({ isLoading: true, error: null });
+
+    const response = await fetchConversationMessages(conversationId);
+
+    if (response.error) {
+      set({ error: response.error, isLoading: false });
+      return;
+    }
+
+    if (response.data) {
+      set((state) => ({
+        selectedConversation: state.selectedConversation
+          ? {
+              ...state.selectedConversation,
+              messages: response.data,
+            }
+          : null,
+        isLoading: false,
+      }));
+    }
+  },
 }));

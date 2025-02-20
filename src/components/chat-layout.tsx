@@ -9,10 +9,10 @@ import { useChatStore } from '@/lib/store';
 import Link from 'next/link';
 
 export default function ChatLayout() {
-  const { chats, selectedChat, addChat, setSelectedChat } = useChatStore();
+  // const { chats, selectedChat, addChat, setSelectedChat } = useChatStore();
 
   const handleNewChat = () => {
-    addChat('New Chat');
+    // addChat('New Chat');
   };
 
   return (
@@ -31,7 +31,7 @@ export default function ChatLayout() {
         </div>
         <ScrollArea className="flex-1">
           <div className="space-y-2 p-4">
-            {chats.map((chat) => (
+            {/* {chats.map((chat) => (
               <Button
                 key={chat.id}
                 variant={selectedChat?.id === chat.id ? 'secondary' : 'ghost'}
@@ -41,7 +41,7 @@ export default function ChatLayout() {
                 <MessageSquare className="mr-2 h-4 w-4" />
                 {chat.title}
               </Button>
-            ))}
+            ))} */}
           </div>
         </ScrollArea>
         <Separator />
@@ -54,7 +54,7 @@ export default function ChatLayout() {
       </div>
 
       {/* Main Chat Area */}
-      {selectedChat && <ChatWindow />}
+      {/* {selectedChat && <ChatWindow />} */}
     </div>
   );
 }

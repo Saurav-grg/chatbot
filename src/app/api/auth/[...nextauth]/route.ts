@@ -18,8 +18,14 @@ const handler = NextAuth({
     // error: '/auth/error',     // Error page (optional)
   },
   callbacks: {
-    async session({ session, token }) {
-      return session;
+    async session({ session, token, user }) {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          id: user.id,
+        },
+      };
     },
     async jwt({ token, user }) {
       return token;

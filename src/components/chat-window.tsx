@@ -6,40 +6,61 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useChatStore } from '@/lib/store';
+import { googleAiResponse } from '@/lib/actions';
 
 export default function ChatWindow() {
-  const { selectedChat, messages, addMessage } = useChatStore();
+  const { selectedConversation } = useChatStore();
   const [input, setInput] = useState('');
 
-  const handleSend = async () => {
-    if (!input.trim() || !selectedChat) return;
+  // const handleSend = async () => {
+  //   if (!input.trim() || !selectedConversation) return;
+
+  //   // Add user message
+  //   addMessage(input, 'user', selectedConversation.id);
+
+  //   // Simulate AI response
+  //   setTimeout(() => {
+  //     addMessage(
+  //       "This is a placeholder response. In a real implementation, this would be the AI's response.",
+  //       'assistant',
+  //       selectedConversation.id
+  //     );
+  //   }, 1000);
+
+  //   setInput('');
+  // };
+  const handleSubmit = async () => {
+    if (!input.trim() || !selectedConversation) return;
 
     // Add user message
-    addMessage(input, 'user', selectedChat.id);
+    // addMessage(input, 'user', selectedConversation.id);
 
-    // Simulate AI response
-    setTimeout(() => {
-      addMessage(
-        "This is a placeholder response. In a real implementation, this would be the AI's response.",
-        'assistant',
-        selectedChat.id
-      );
-    }, 1000);
+    // Generate AI response
+    try {
+      const response = await googleAiResponse(input);
+      // addMessage(response, 'assistant', selectedConversation.id);
+    } catch (error) {
+      console.error('Failed to generate AI response:', error);
+      // addMessage(
+      //   'Failed to generate AI response',
+      //   'assistant',
+      //   selectedConversation.id
+      // );
+    }
 
     setInput('');
   };
-
-  if (!selectedChat) return null;
+  if (!selectedConversation) return null;
 
   return (
     <div className="flex-1 flex flex-col">
       <div className="border-b p-4">
-        <h2 className="text-lg font-semibold">{selectedChat.title}</h2>
+        <h2 className="text-lg font-semibold">{selectedConversation.title}</h2>
       </div>
 
       <ScrollArea className="flex-1 p-4">
         <div className="space-y-4">
-          {messages[selectedChat.id]?.map((message) => (
+          {/* {messages[selectedConversation.id]?.map((message) => (
             <div
               key={message.id}
               className={`flex ${
@@ -56,7 +77,7 @@ export default function ChatWindow() {
                 {message.content}
               </div>
             </div>
-          ))}
+          ))} */}
         </div>
       </ScrollArea>
 
@@ -70,11 +91,11 @@ export default function ChatWindow() {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                handleSend();
+                // handleSend();
               }
             }}
           />
-          <Button onClick={handleSend}>
+          <Button onClick={handleSubmit}>
             <SendHorizontal className="h-4 w-4" />
           </Button>
         </div>
