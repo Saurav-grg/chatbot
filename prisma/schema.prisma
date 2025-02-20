@@ -63,9 +63,13 @@ model Conversation {
 model Message {
   id            String   @id @default(cuid())
   conversationId String
-  sender        String
+  sender        senderType
   text          String
   createdAt     DateTime @default(now())
 
   conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+}
+enum senderType{
+  user
+  bot
 }

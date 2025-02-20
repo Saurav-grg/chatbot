@@ -30,15 +30,15 @@ export async function createConversation(
   title: string
 ): ServerActionResponse<Conversation> {
   try {
-    const conversation: Conversation = await prisma.conversation.create({
+    const conversation = (await prisma.conversation.create({
       data: {
         title,
-        userId: session?.user?.id, // Assuming userId: session?.user?.id is passed as a parameter to the function
+        userId: session?.user?.id ?? '',
       },
       include: {
         messages: true,
       },
-    });
+    })) as Conversation;
 
     return { data: conversation };
   } catch (error) {
@@ -49,8 +49,8 @@ export async function createConversation(
 
 export async function addMessageToConversation(
   conversationId: string,
-  content: string,
-  role: 'user' | 'assistant'
+  text: string,
+  sender: 'user' | 'bot'
 ): ServerActionResponse<Message> {
   try {
     // Verify conversation belongs to user
@@ -67,8 +67,8 @@ export async function addMessageToConversation(
 
     const message = await prisma.message.create({
       data: {
-        content,
-        role,
+        text,
+        sender,
         conversationId,
       },
     });

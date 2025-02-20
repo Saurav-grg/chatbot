@@ -15,7 +15,7 @@ interface ChatStore extends ChatStoreState {
   loadUserConversations: () => Promise<void>;
   // Message actions
   sendMessage: (content: string) => Promise<void>;
-  loadConversationMessages: (conversationId: string) => Promise<void>;
+  // loadConversationMessages: (conversationId: string) => Promise<void>;
   // Error handling
   setError: (error: string | null) => void;
 }
@@ -31,8 +31,18 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setError: (error) => set({ error }),
 
   // Conversation actions
-  selectConversation: (conversation) =>
-    set({ selectedConversation: conversation }),
+  selectConversation: async (conversation: Conversation) => {
+    set({ isLoading: true, error: null });
+    const response = await fetchConversationMessages(conversation.id);
+    if (response.error) {
+      set({ error: response.error, isLoading: false });
+      return;
+    }
+    set({
+      selectedConversation: { ...conversation, messages: response.data || [] },
+      isLoading: false,
+    });
+  },
 
   createNewConversation: async (title) => {
     set({ isLoading: true, error: null });
@@ -72,7 +82,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   // Message actions
-  sendMessage: async (content) => {
+  sendMessage: async (text: string) => {
     const { selectedConversation } = get();
     if (!selectedConversation) {
       set({ error: 'No conversation selected' });
@@ -85,7 +95,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       // Send user message
       const userMessageResponse = await addMessageToConversation(
         selectedConversation.id,
-        content,
+        text,
         'user'
       );
 
@@ -95,13 +105,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }
 
       // Update local state with user message
-      const updatedMessages = [...selectedConversation.messages];
-      if (userMessageResponse.data) {
-        updatedMessages.push(userMessageResponse.data);
-      }
+      const userMessage = userMessageResponse.data!;
+      const updatedMessages = [...selectedConversation.messages, userMessage];
 
       // TODO: Integrate with your AI service here
-      const aiResponse = await googleAiResponse(content);
+      const aiResponse = await googleAiResponse(text);
       if (!aiResponse) {
         set({ error: 'response denied!!!' });
         return;
@@ -110,7 +118,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       const assistantMessageResponse = await addMessageToConversation(
         selectedConversation.id,
         aiResponse,
-        'assistant'
+        'bot'
       );
       if (assistantMessageResponse.data) {
         updatedMessages.push(assistantMessageResponse.data);
@@ -131,7 +139,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }
   },
 
-  loadConversationMessages: async (conversationId) => {
+  /*loadConversationMessages: async (conversationId) => {
     set({ isLoading: true, error: null });
 
     const response = await fetchConversationMessages(conversationId);
@@ -152,5 +160,5 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         isLoading: false,
       }));
     }
-  },
+  },*/
 }));

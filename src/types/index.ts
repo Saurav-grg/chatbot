@@ -4,8 +4,8 @@
 export interface Message {
   id: string;
   conversationId: string;
-  content: string;
-  role: 'user' | 'assistant';
+  text: string;
+  sender: 'user' | 'bot';
   createdAt: Date;
 }
 
