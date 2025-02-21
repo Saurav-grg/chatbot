@@ -11,11 +11,10 @@ import {
 interface ChatStore extends ChatStoreState {
   // Conversation actions
   selectConversation: (conversation: Conversation) => void;
-  createNewConversation: (title: string) => Promise<void>;
+  createNewConversation: () => Promise<void>;
   loadUserConversations: () => Promise<void>;
   // Message actions
   sendMessage: (content: string) => Promise<void>;
-  // loadConversationMessages: (conversationId: string) => Promise<void>;
   // Error handling
   setError: (error: string | null) => void;
 }
@@ -44,9 +43,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     });
   },
 
-  createNewConversation: async (title) => {
+  createNewConversation: async () => {
     set({ isLoading: true, error: null });
-
+    const title = `Conversation ${get().conversations.length + 1}`;
     const response = await createConversation(title);
 
     if (response.error) {
@@ -83,15 +82,31 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // Message actions
   sendMessage: async (text: string) => {
-    const { selectedConversation } = get();
-    if (!selectedConversation) {
-      set({ error: 'No conversation selected' });
-      return;
-    }
+    let { selectedConversation } = get();
 
     set({ isLoading: true, error: null });
 
     try {
+      if (selectedConversation == null) {
+        const title = `Conversation ${get().conversations.length + 1}`;
+        const response = await createConversation(title);
+
+        if (response.error) {
+          set({ error: response.error, isLoading: false });
+          return;
+        }
+
+        if (response.data) {
+          set((state) => ({
+            conversations: [...state.conversations, response.data!],
+            selectedConversation: response.data,
+          }));
+          // selectedConversation = get().selectedConversation!;
+        }
+        if (!selectedConversation) {
+          return;
+        }
+      }
       // Send user message
       const userMessageResponse = await addMessageToConversation(
         selectedConversation.id,
@@ -138,27 +153,4 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       set({ isLoading: false });
     }
   },
-
-  /*loadConversationMessages: async (conversationId) => {
-    set({ isLoading: true, error: null });
-
-    const response = await fetchConversationMessages(conversationId);
-
-    if (response.error) {
-      set({ error: response.error, isLoading: false });
-      return;
-    }
-
-    if (response.data) {
-      set((state) => ({
-        selectedConversation: state.selectedConversation
-          ? {
-              ...state.selectedConversation,
-              messages: response.data,
-            }
-          : null,
-        isLoading: false,
-      }));
-    }
-  },*/
 }));

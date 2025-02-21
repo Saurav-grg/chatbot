@@ -7,14 +7,28 @@ import { Separator } from '@/components/ui/separator';
 import ChatWindow from '@/components/chat-window';
 import { useChatStore } from '@/lib/store';
 import Link from 'next/link';
-
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
 export default function ChatLayout() {
-  // const { chats, selectedChat, addChat, setSelectedChat } = useChatStore();
+  const {
+    conversations,
+    selectedConversation,
+    createNewConversation,
+    selectConversation,
+    loadUserConversations,
+  } = useChatStore();
 
   const handleNewChat = () => {
-    // addChat('New Chat');
+    createNewConversation();
   };
-
+  useEffect(() => {
+    try {
+      loadUserConversations();
+      toast.success('Conversations loaded successfully');
+    } catch (e) {
+      toast.error('Failed to load conversations');
+    }
+  }, []);
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
@@ -31,17 +45,19 @@ export default function ChatLayout() {
         </div>
         <ScrollArea className="flex-1">
           <div className="space-y-2 p-4">
-            {/* {chats.map((chat) => (
+            {conversations.map((chat) => (
               <Button
                 key={chat.id}
-                variant={selectedChat?.id === chat.id ? 'secondary' : 'ghost'}
+                variant={
+                  selectedConversation?.id === chat.id ? 'secondary' : 'ghost'
+                }
                 className="w-full justify-start"
-                onClick={() => setSelectedChat(chat)}
+                onClick={() => selectConversation(chat)}
               >
                 <MessageSquare className="mr-2 h-4 w-4" />
                 {chat.title}
               </Button>
-            ))} */}
+            ))}
           </div>
         </ScrollArea>
         <Separator />
@@ -54,7 +70,7 @@ export default function ChatLayout() {
       </div>
 
       {/* Main Chat Area */}
-      {/* {selectedChat && <ChatWindow />} */}
+      <ChatWindow />
     </div>
   );
 }

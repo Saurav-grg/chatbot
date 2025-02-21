@@ -4,9 +4,12 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 import { prisma } from './prisma';
 import { getServerSession } from 'next-auth';
 
-const session = await getServerSession();
-
 export async function googleAiResponse(prompt: string) {
+  const session = await getServerSession();
+  if (!session) {
+    console.error('unauthenticated!!!');
+    return;
+  }
   const apiKey = process.env.GEMINI_API_KEY; // No NEXT_PUBLIC_ prefix needed for server actions
 
   if (!apiKey) {
@@ -30,6 +33,10 @@ export async function createConversation(
   title: string
 ): ServerActionResponse<Conversation> {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return { error: 'unauthenticated!!!' };
+    }
     const conversation = (await prisma.conversation.create({
       data: {
         title,
@@ -53,6 +60,10 @@ export async function addMessageToConversation(
   sender: 'user' | 'bot'
 ): ServerActionResponse<Message> {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return { error: 'unauthenticated!!!' };
+    }
     // Verify conversation belongs to user
     const conversation = await prisma.conversation.findFirst({
       where: {
@@ -84,6 +95,10 @@ export async function fetchUserConversations(): ServerActionResponse<
   Conversation[]
 > {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return { error: 'unauthenticated!!!' };
+    }
     const conversations = await prisma.conversation.findMany({
       where: {
         userId: session?.user?.id,
@@ -107,6 +122,10 @@ export async function fetchConversationMessages(
   conversationId: string
 ): ServerActionResponse<Message[]> {
   try {
+    const session = await getServerSession();
+    if (!session) {
+      return { error: 'unauthenticated!!!' };
+    }
     const messages = await prisma.message.findMany({
       where: {
         conversationId,
