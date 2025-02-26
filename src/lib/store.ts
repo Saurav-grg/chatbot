@@ -25,7 +25,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   selectedConversation: null,
   isLoading: false,
   error: null,
-
+  model: 'gemini-1.5-flash',
   // Basic actions
   setError: (error) => set({ error }),
 
@@ -82,12 +82,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
   // Message actions
   sendMessage: async (text: string) => {
-    let { selectedConversation } = get();
-
     set({ isLoading: true, error: null });
-
     try {
-      if (selectedConversation == null) {
+      let { selectedConversation } = get();
+      if (!selectedConversation) {
         const title = `Conversation ${get().conversations.length + 1}`;
         const response = await createConversation(title);
 
@@ -95,18 +93,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           set({ error: response.error, isLoading: false });
           return;
         }
-
         if (response.data) {
           set((state) => ({
             conversations: [...state.conversations, response.data!],
             selectedConversation: response.data,
           }));
-          // selectedConversation = get().selectedConversation!;
         }
+        selectedConversation = get().selectedConversation;
         if (!selectedConversation) {
+          set({ error: 'Failed to select new conversation', isLoading: false });
           return;
         }
       }
+
       // Send user message
       const userMessageResponse = await addMessageToConversation(
         selectedConversation.id,
@@ -121,12 +120,38 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
       // Update local state with user message
       const userMessage = userMessageResponse.data!;
-      const updatedMessages = [...selectedConversation.messages, userMessage];
+      set((state) => ({
+        selectedConversation: state.selectedConversation
+          ? {
+              ...state.selectedConversation,
+              messages: [...state.selectedConversation.messages, userMessage],
+            }
+          : null,
+      }));
+      // const updatedMessages = [...selectedConversation.messages, userMessage];
 
       // TODO: Integrate with your AI service here
-      const aiResponse = await googleAiResponse(text);
+      const aiResponse = await googleAiResponse(text, get().model);
       if (!aiResponse) {
-        set({ error: 'response denied!!!' });
+        // Add an error message to the chat instead of deleting the user message
+        const errorMessage: Message = {
+          id: `error-${Date.now()}`, // Temporary ID
+          conversationId: selectedConversation.id,
+          text: 'Sorry, I couldn’t respond right now.',
+          sender: 'bot',
+          createdAt: new Date(), // Assuming Message type has timestamp
+        };
+        set((state) => ({
+          selectedConversation: state.selectedConversation
+            ? {
+                ...state.selectedConversation,
+                messages: [
+                  ...state.selectedConversation.messages,
+                  errorMessage,
+                ],
+              }
+            : null,
+        }));
         return;
       }
       // Save AI response
@@ -135,18 +160,21 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         aiResponse,
         'bot'
       );
-      if (assistantMessageResponse.data) {
-        updatedMessages.push(assistantMessageResponse.data);
+      if (assistantMessageResponse.error) {
+        set({ error: assistantMessageResponse.error });
+        return;
       }
-      // Update conversation with new messages
-      set((state) => ({
-        selectedConversation: state.selectedConversation
-          ? {
-              ...state.selectedConversation,
-              messages: updatedMessages,
-            }
-          : null,
-      }));
+      const aiMessage = assistantMessageResponse.data!;
+      if (assistantMessageResponse.data) {
+        set((state) => ({
+          selectedConversation: state.selectedConversation
+            ? {
+                ...state.selectedConversation,
+                messages: [...state.selectedConversation.messages, aiMessage],
+              }
+            : null,
+        }));
+      }
     } catch (error) {
       set({ error: 'Failed to send message' });
     } finally {

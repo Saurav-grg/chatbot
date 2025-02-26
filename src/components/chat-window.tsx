@@ -9,8 +9,14 @@ import { useChatStore } from '@/lib/store';
 // import { googleAiResponse } from '@/lib/actions';
 
 export default function ChatWindow() {
-  const { selectedConversation, sendMessage } = useChatStore();
+  const { selectedConversation, sendMessage, isLoading } = useChatStore();
   const [input, setInput] = useState('');
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim()) return;
+
+    await sendMessage(text);
+    setInput(''); // Clear input after sending
+  };
 
   if (!selectedConversation)
     return (
@@ -24,11 +30,11 @@ export default function ChatWindow() {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage(input);
+                handleSendMessage(input);
               }
             }}
           />
-          <Button onClick={() => sendMessage(input)}>
+          <Button onClick={() => handleSendMessage(input)}>
             <SendHorizontal className="h-4 w-4" />
           </Button>
         </div>
@@ -67,6 +73,7 @@ export default function ChatWindow() {
       <div className="border-t p-4">
         <div className="flex gap-2">
           <Textarea
+            disabled={isLoading}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
@@ -74,12 +81,16 @@ export default function ChatWindow() {
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
-                sendMessage(input);
+                handleSendMessage(input);
               }
             }}
           />
-          <Button onClick={() => sendMessage(input)}>
-            <SendHorizontal className="h-4 w-4" />
+          <Button onClick={() => handleSendMessage(input)}>
+            {isLoading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+            ) : (
+              <SendHorizontal className="h-4 w-4" />
+            )}
           </Button>
         </div>
       </div>

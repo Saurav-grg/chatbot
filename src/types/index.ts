@@ -22,6 +22,7 @@ export interface Conversation {
 export interface ChatStoreState {
   conversations: Conversation[];
   selectedConversation: Conversation | null;
+  model: string;
   isLoading: boolean;
   error: string | null;
 }

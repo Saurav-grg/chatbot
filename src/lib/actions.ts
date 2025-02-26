@@ -1,11 +1,13 @@
 'use server';
 import { Message, Conversation, ServerActionResponse } from '@/types';
-import { GoogleGenerativeAI } from '@google/generative-ai';
+// import { GoogleGenerativeAI } from '@google/generative-ai';
+import { OpenAI } from 'openai';
 import { prisma } from './prisma';
 import { getServerSession } from 'next-auth';
+import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export async function googleAiResponse(prompt: string) {
-  const session = await getServerSession();
+export async function googleAiResponse(prompt: string, selectedModel: string) {
+  const session = await getServerSession(authOptions);
   if (!session) {
     console.error('unauthenticated!!!');
     return;
@@ -17,12 +19,24 @@ export async function googleAiResponse(prompt: string) {
   }
 
   try {
-    const genAI = new GoogleGenerativeAI(apiKey);
-    const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+    const openai = new OpenAI({
+      apiKey: apiKey,
+      baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    });
+    // Use the chat.completions.create method to generate a response
+    const completion = await openai.chat.completions.create({
+      model: selectedModel, // e.g., "gemini-1.5-flash" or "gemini-1.5-pro"
+      messages: [{ role: 'user', content: prompt }],
+    });
 
-    const result = await model.generateContent(prompt);
-    // console.log('reponse: ', result.response.text());
-    return result.response.text();
+    // Return the generated response
+    return completion.choices[0].message.content;
+    // const genAI = new GoogleGenerativeAI(apiKey);
+    // const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+
+    // const result = await model.generateContent(prompt);
+    // // console.log('reponse: ', result.response.text());
+    // return result.response.text();
   } catch (error) {
     console.error('Error generating AI response:', error);
     throw new Error('Failed to generate AI response');
@@ -33,7 +47,7 @@ export async function createConversation(
   title: string
 ): ServerActionResponse<Conversation> {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return { error: 'unauthenticated!!!' };
     }
@@ -60,7 +74,7 @@ export async function addMessageToConversation(
   sender: 'user' | 'bot'
 ): ServerActionResponse<Message> {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return { error: 'unauthenticated!!!' };
     }
@@ -95,7 +109,7 @@ export async function fetchUserConversations(): ServerActionResponse<
   Conversation[]
 > {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return { error: 'unauthenticated!!!' };
     }
@@ -122,7 +136,7 @@ export async function fetchConversationMessages(
   conversationId: string
 ): ServerActionResponse<Message[]> {
   try {
-    const session = await getServerSession();
+    const session = await getServerSession(authOptions);
     if (!session) {
       return { error: 'unauthenticated!!!' };
     }
