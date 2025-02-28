@@ -6,6 +6,7 @@ import {
   fetchUserConversations,
   fetchConversationMessages,
   googleAiResponse,
+  deleteConversation,
 } from './actions';
 
 interface ChatStore extends ChatStoreState {
@@ -15,6 +16,7 @@ interface ChatStore extends ChatStoreState {
   loadUserConversations: () => Promise<void>;
   // Message actions
   sendMessage: (content: string) => Promise<void>;
+  deleteUserConversation: (conversationId: Conversation['id']) => Promise<void>;
   // Error handling
   setError: (error: string | null) => void;
 }
@@ -79,7 +81,29 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       });
     }
   },
+  deleteUserConversation: async (conversationId: Conversation['id']) => {
+    set({ isLoading: true, error: null });
 
+    const response = await deleteConversation(conversationId);
+
+    if (response.error) {
+      set({ error: response.error, isLoading: false });
+      return;
+    }
+    if (response.data) {
+      set((state) => ({
+        conversations: state.conversations.filter(
+          (chat) => chat.id !== conversationId
+        ),
+        // If the deleted conversation was selected, clear the selection
+        selectedConversation:
+          state.selectedConversation?.id === conversationId
+            ? null
+            : state.selectedConversation,
+        isLoading: false,
+      }));
+    }
+  },
   // Message actions
   sendMessage: async (text: string) => {
     set({ isLoading: true, error: null });

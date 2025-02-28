@@ -20,13 +20,17 @@ export default function ChatWindow() {
 
   if (!selectedConversation)
     return (
-      <div className="border-t p-4">
-        <div className="flex gap-2">
+      <div className="flex flex-col items-center justify-center h-full w-full p-8 text-center">
+        <h2 className="text-3xl font-bold mb-4">Welcome to the Chat</h2>
+        <p className="text-lg text-muted-foreground mb-8">
+          Select a conversation to start chatting or create a new one.
+        </p>
+        <div className="w-full max-w-md">
           <Textarea
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message..."
-            className="min-h-[60px]"
+            placeholder="Type your message to start a new conversation..."
+            className="min-h-[100px] mb-4"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -34,8 +38,9 @@ export default function ChatWindow() {
               }
             }}
           />
-          <Button onClick={() => handleSendMessage(input)}>
-            <SendHorizontal className="h-4 w-4" />
+          <Button onClick={() => handleSendMessage(input)} className="w-full">
+            <SendHorizontal className="h-5 w-5 mr-2" />
+            Start New Conversation
           </Button>
         </div>
       </div>

@@ -12,7 +12,7 @@ export async function googleAiResponse(prompt: string, selectedModel: string) {
     console.error('unauthenticated!!!');
     return;
   }
-  const apiKey = process.env.GEMINI_API_KEY; // No NEXT_PUBLIC_ prefix needed for server actions
+  const apiKey = process.env.GEMINI_API_KEY;
 
   if (!apiKey) {
     throw new Error('GEMINI_API_KEY is not defined');
@@ -25,18 +25,11 @@ export async function googleAiResponse(prompt: string, selectedModel: string) {
     });
     // Use the chat.completions.create method to generate a response
     const completion = await openai.chat.completions.create({
-      model: selectedModel, // e.g., "gemini-1.5-flash" or "gemini-1.5-pro"
+      model: selectedModel,
       messages: [{ role: 'user', content: prompt }],
     });
-
-    // Return the generated response
+    console.log(completion);
     return completion.choices[0].message.content;
-    // const genAI = new GoogleGenerativeAI(apiKey);
-    // const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
-
-    // const result = await model.generateContent(prompt);
-    // // console.log('reponse: ', result.response.text());
-    // return result.response.text();
   } catch (error) {
     console.error('Error generating AI response:', error);
     throw new Error('Failed to generate AI response');
@@ -67,7 +60,6 @@ export async function createConversation(
     return { error: 'Failed to create conversation' };
   }
 }
-
 export async function addMessageToConversation(
   conversationId: string,
   text: string,
@@ -156,5 +148,31 @@ export async function fetchConversationMessages(
   } catch (error) {
     console.error('Error fetching messages:', error);
     return { error: 'Failed to fetch messages' };
+  }
+}
+export async function deleteConversation(conversationId: string) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return { error: 'unauthenticated!!!' };
+    }
+    const conversationExists = await prisma.conversation.findFirst({
+      where: {
+        id: conversationId,
+        userId: session.user.id,
+      },
+    });
+    if (!conversationExists) {
+      return { error: 'Conversation not found or unauthorized' };
+    }
+    const deletedConversation = await prisma.conversation.delete({
+      where: {
+        id: conversationId,
+      },
+    });
+    return { data: deletedConversation };
+  } catch (error) {
+    console.error('Error deleting conversations:', error);
+    return { error: 'Failed to delete conversations' };
   }
 }
