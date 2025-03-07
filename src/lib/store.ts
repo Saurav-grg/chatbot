@@ -5,7 +5,7 @@ import {
   addMessageToConversation,
   fetchUserConversations,
   fetchConversationMessages,
-  googleAiResponse,
+  aiResponse,
   deleteConversation,
 } from './actions';
 
@@ -19,6 +19,8 @@ interface ChatStore extends ChatStoreState {
   deleteUserConversation: (conversationId: Conversation['id']) => Promise<void>;
   // Error handling
   setError: (error: string | null) => void;
+  //model
+  setModel: (model: string) => void;
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -30,7 +32,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   model: 'gemini-1.5-flash',
   // Basic actions
   setError: (error) => set({ error }),
-
+  setModel: (model) => set({ model }),
   // Conversation actions
   selectConversation: async (conversation: Conversation) => {
     set({ isLoading: true, error: null });
@@ -155,8 +157,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       // const updatedMessages = [...selectedConversation.messages, userMessage];
 
       // TODO: Integrate with your AI service here
-      const aiResponse = await googleAiResponse(text, get().model);
-      if (!aiResponse) {
+      const modelResponse = await aiResponse(text, get().model);
+      if (!modelResponse) {
         // Add an error message to the chat instead of deleting the user message
         const errorMessage: Message = {
           id: `error-${Date.now()}`, // Temporary ID
@@ -181,7 +183,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       // Save AI response
       const assistantMessageResponse = await addMessageToConversation(
         selectedConversation.id,
-        aiResponse,
+        modelResponse,
         'bot'
       );
       if (assistantMessageResponse.error) {

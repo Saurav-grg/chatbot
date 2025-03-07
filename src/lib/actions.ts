@@ -1,34 +1,70 @@
 'use server';
-import { Message, Conversation, ServerActionResponse } from '@/types';
-// import { GoogleGenerativeAI } from '@google/generative-ai';
+import {
+  Message,
+  Conversation,
+  ServerActionResponse,
+  ModelProvider,
+} from '@/types';
 import { OpenAI } from 'openai';
 import { prisma } from './prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-export async function googleAiResponse(prompt: string, selectedModel: string) {
+// Model config map
+const MODEL_CONFIGS: Record<string, { provider: ModelProvider }> = {
+  'gemini-1.5-flash': { provider: 'google' },
+  'gemini-1.5-pro': { provider: 'google' },
+  'open-codestral-mamba': { provider: 'mistral' },
+  'mistral-small-latest': { provider: 'mistral' },
+  // 'gpt-4o': { provider: 'openai' }
+};
+
+// Provider config map
+const PROVIDER_CONFIGS: Record<
+  ModelProvider,
+  { baseURL: string; envKey: string }
+> = {
+  google: {
+    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+    envKey: process.env.GEMINI_API_KEY || '',
+  },
+  mistral: {
+    baseURL: 'https://api.mistral.ai/v1/',
+    envKey: process.env.MISTRAL_API_KEY || '',
+  },
+  // openai: {
+  //   baseURL: 'https://api.openai.com/v1/',
+  //   envKey: 'OPENAI_API_KEY'
+  // }
+};
+export async function aiResponse(prompt: string, selectedModel: string) {
   const session = await getServerSession(authOptions);
   if (!session) {
     console.error('unauthenticated!!!');
     return;
   }
-  const apiKey = process.env.GEMINI_API_KEY;
-
-  if (!apiKey) {
-    throw new Error('GEMINI_API_KEY is not defined');
+  const modelConfig = MODEL_CONFIGS[selectedModel];
+  if (!modelConfig) {
+    console.error(`Unknown model: ${selectedModel}`);
+    return;
   }
-
+  const providerConfig = PROVIDER_CONFIGS[modelConfig.provider];
+  const apiKey = process.env[providerConfig.envKey];
+  if (!apiKey) {
+    console.error(`${providerConfig.envKey} is not defined`);
+    return;
+  }
   try {
     const openai = new OpenAI({
       apiKey: apiKey,
-      baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
+      baseURL: providerConfig.baseURL,
     });
     // Use the chat.completions.create method to generate a response
     const completion = await openai.chat.completions.create({
       model: selectedModel,
       messages: [{ role: 'user', content: prompt }],
     });
-    console.log(completion);
+    // console.log(completion);
     return completion.choices[0].message.content;
   } catch (error) {
     console.error('Error generating AI response:', error);

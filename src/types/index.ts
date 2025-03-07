@@ -17,7 +17,13 @@ export interface Conversation {
   createdAt: Date;
   updatedAt: Date;
 }
+export type ModelProvider = 'google' | 'mistral';
 
+export interface AIModelConfig {
+  name: string;
+  displayName: string;
+  provider: ModelProvider;
+}
 // Store state types
 export interface ChatStoreState {
   conversations: Conversation[];
@@ -25,6 +31,13 @@ export interface ChatStoreState {
   model: string;
   isLoading: boolean;
   error: string | null;
+}
+export interface CodeProps {
+  node?: any;
+  inline?: boolean;
+  className?: string;
+  children?: React.ReactNode;
+  [key: string]: any;
 }
 
 // Action types for better type safety
