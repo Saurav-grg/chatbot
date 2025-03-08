@@ -12,8 +12,9 @@ import {
 interface ChatStore extends ChatStoreState {
   // Conversation actions
   selectConversation: (conversation: Conversation) => void;
-  createNewConversation: () => Promise<void>;
+  // createNewConversation: () => Promise<void>;
   loadUserConversations: () => Promise<void>;
+  generateChatTitle: (text: string) => string;
   // Message actions
   sendMessage: (content: string) => Promise<void>;
   deleteUserConversation: (conversationId: Conversation['id']) => Promise<void>;
@@ -46,25 +47,69 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       isLoading: false,
     });
   },
+  generateChatTitle: (text: string) => {
+    // Handle empty messages
+    if (!text || text.trim() === '') {
+      return 'New Conversation';
+    }
+    // Truncate long messages for processing
+    const truncatedMessage =
+      text.length > 100 ? text.substring(0, 100) + '...' : text;
 
-  createNewConversation: async () => {
-    set({ isLoading: true, error: null });
-    const title = `Conversation ${get().conversations.length + 1}`;
-    const response = await createConversation(title);
+    // Extract key topics
+    let title = '';
+    // Method 1: Use the first sentence if it's short enough
+    const firstSentence = truncatedMessage.split(/[.!?]/)[0].trim();
+    if (firstSentence.length <= 50 && firstSentence.length >= 10) {
+      title = firstSentence;
+    }
+    // Method 2: Extract first N words (for messages without clear sentences)
+    else {
+      const words = truncatedMessage.split(/\s+/);
+      const keyWords = words.slice(0, Math.min(6, words.length));
+      title = keyWords.join(' ');
 
-    if (response.error) {
-      set({ error: response.error, isLoading: false });
-      return;
+      // Add ellipsis if we truncated
+      if (words.length > 6) {
+        title += '...';
+      }
     }
 
-    if (response.data) {
-      set((state) => ({
-        conversations: [...state.conversations, response.data!],
-        selectedConversation: response.data,
-        isLoading: false,
-      }));
+    // Remove common filler words at the beginning
+    title = title.replace(
+      /^(hey|hi|hello|um|so|basically|just|i was|i am|i'm)\s+/i,
+      ''
+    );
+
+    // Capitalize first letter
+    title = title.charAt(0).toUpperCase() + title.slice(1);
+
+    // Ensure title isn't too long for display
+    if (title.length > 60) {
+      title = title.substring(0, 60) + '...';
     }
+
+    return title;
   },
+
+  // createNewConversation: async () => {
+  //   set({ isLoading: true, error: null });
+  //   const title = `Conversation ${get().conversations.length + 1}`;
+  //   const response = await createConversation(title);
+
+  //   if (response.error) {
+  //     set({ error: response.error, isLoading: false });
+  //     return;
+  //   }
+
+  //   if (response.data) {
+  //     set((state) => ({
+  //       conversations: [...state.conversations, response.data!],
+  //       selectedConversation: response.data,
+  //       isLoading: false,
+  //     }));
+  //   }
+  // },
 
   loadUserConversations: async () => {
     set({ isLoading: true, error: null });
@@ -112,7 +157,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     try {
       let { selectedConversation } = get();
       if (!selectedConversation) {
-        const title = `Conversation ${get().conversations.length + 1}`;
+        const title = get().generateChatTitle(text);
         const response = await createConversation(title);
 
         if (response.error) {

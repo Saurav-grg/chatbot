@@ -19,7 +19,7 @@ export default function ChatLayout() {
   const {
     conversations,
     selectedConversation,
-    createNewConversation,
+    // createNewConversation,
     selectConversation,
     loadUserConversations,
     deleteUserConversation,
@@ -31,7 +31,7 @@ export default function ChatLayout() {
   const [openMenuId, setOpenMenuId] = useState<string | number | null>(null);
   const menuRef = useRef<HTMLDivElement>(null);
   const handleNewChat = () => {
-    createNewConversation();
+    useChatStore.setState({ selectedConversation: null });
   };
 
   const handleDeleteClick = (

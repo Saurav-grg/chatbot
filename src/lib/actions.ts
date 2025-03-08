@@ -49,7 +49,7 @@ export async function aiResponse(prompt: string, selectedModel: string) {
     return;
   }
   const providerConfig = PROVIDER_CONFIGS[modelConfig.provider];
-  const apiKey = process.env[providerConfig.envKey];
+  const apiKey = providerConfig.envKey;
   if (!apiKey) {
     console.error(`${providerConfig.envKey} is not defined`);
     return;

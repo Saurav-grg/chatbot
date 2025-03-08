@@ -7,7 +7,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useChatStore } from '@/lib/store';
 import Markdown from 'react-markdown';
-import { CodeProps } from '@/types';
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 
 // import { googleAiResponse } from '@/lib/actions';
 
@@ -88,24 +89,35 @@ export default function ChatWindow() {
                   message.text
                 ) : (
                   <Markdown
-                  // className="prose" // Tailwind "prose" class for nice typography
-                  // components={{
-                  //   code({ node, className, children, ...props }) {
-                  //     // const isInline = inline || false;
-                  //     const isInline = !props.node?.tagName?.includes('pre');
-                  //     return isInline ? (
-                  //       <code className="bg-gray-200 px-1 rounded" {...props}>
-                  //         {children}
-                  //       </code>
-                  //     ) : (
-                  //       <div className="my-4">
-                  //         <pre className="bg-gray-800 text-white p-4 rounded-lg overflow-auto">
-                  //           <code>{children}</code>
-                  //         </pre>
-                  //       </div>
-                  //     );
-                  //   },
-                  // }}
+                    // className="prose" // Tailwind "prose" class for nice typography
+                    components={{
+                      code({ node, className, children, ...props }) {
+                        // const isInline = false;
+                        // const isInline = !node?.tagName?.includes('pre');
+                        // console.log(className);
+                        // console.log(node?.tagName);
+                        // if (node?.tagName == 'pre') {
+                        console.log(children);
+                        // }
+                        const match = /language-(\w+)/.exec(className || '');
+                        return match ? (
+                          // <div className=" my-2 rounded-lg overflow-auto">
+                          <SyntaxHighlighter
+                            language={match[1]}
+                            PreTag="div"
+                            {...props}
+                            style={dark}
+                          >
+                            {children}
+                          </SyntaxHighlighter>
+                        ) : (
+                          // </div>
+                          <code className="bg-gray-200 px-1 rounded" {...props}>
+                            {children}
+                          </code>
+                        );
+                      },
+                    }}
                   >
                     {message.text}
                   </Markdown>
