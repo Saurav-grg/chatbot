@@ -59,6 +59,7 @@ export async function aiResponse(prompt: string, selectedModel: string) {
       apiKey: apiKey,
       baseURL: providerConfig.baseURL,
     });
+    // console.log(selectedModel);
     // Use the chat.completions.create method to generate a response
     const completion = await openai.chat.completions.create({
       model: selectedModel,

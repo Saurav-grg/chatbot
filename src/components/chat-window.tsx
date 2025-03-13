@@ -1,7 +1,6 @@
 'use client';
-
 import { useState } from 'react';
-import { SendHorizontal } from 'lucide-react';
+import { Check, ChevronDown, SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
@@ -9,7 +8,12 @@ import { useChatStore } from '@/lib/store';
 import Markdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism';
-
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 // import { googleAiResponse } from '@/lib/actions';
 
 export default function ChatWindow() {
@@ -21,7 +25,7 @@ export default function ChatWindow() {
       name: 'Codestral Mamba',
       provider: 'Mistral',
     },
-    { id: 'mistral-large', name: 'Mistral Large', provider: 'Mistral' },
+    { id: 'mistral-small-latest', name: 'Mistral Small', provider: 'Mistral' },
     { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI' },
   ];
   const { selectedConversation, sendMessage, isLoading, model, setModel } =
@@ -43,10 +47,11 @@ export default function ChatWindow() {
         </p>
         <div className="w-full max-w-md">
           <Textarea
+            disabled={isLoading}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message to start a new conversation..."
-            className="min-h-[100px] mb-4"
+            className="min-h-[100px] mb-4 pb-12"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -129,13 +134,13 @@ export default function ChatWindow() {
       </ScrollArea>
 
       <div className="p-4 w-3/4 mx-auto">
-        <div className="flex gap-2 ">
+        <div className="relative">
           <Textarea
             disabled={isLoading}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message..."
-            className="min-h-[100px]"
+            className="min-h-[100px] w-full border rounded-xl p-2 bg-gray-100"
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
@@ -143,15 +148,43 @@ export default function ChatWindow() {
               }
             }}
           />
-          <Button onClick={() => handleSendMessage(input)}>
-            {isLoading ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-            ) : (
-              <SendHorizontal className="h-4 w-4" />
-            )}
-          </Button>
+          <div className="absolute bottom-3 left-3 z-10">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center gap-1 text-xs px-2 py-1 rounded-md bg-muted hover:bg-muted/80 transition-colors">
+                <span>{models.find((m) => m.id === model)?.name}</span>
+                <ChevronDown className="h-3 w-3" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" className="w-[180px]">
+                {models.map((m) => (
+                  <DropdownMenuItem
+                    key={m.id}
+                    className={`flex items-center justify-between ${
+                      model === m.id && 'font-medium'
+                    } `}
+                    // ',model === m.id && 'font-medium'}
+                    onClick={() => setModel(m.id)}
+                  >
+                    {m.name}
+                    {model === m.id && <Check className="h-4 w-4" />}
+                  </DropdownMenuItem>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </div>
     </div>
   );
+}
+{
+  /* <Button
+            className="absolute right-2 "
+            onClick={() => handleSendMessage(input)}
+          >
+            {isLoading ? (
+              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+            ) : (
+              <SendHorizontal />
+            )}
+          </Button> */
 }
