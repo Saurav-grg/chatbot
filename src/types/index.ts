@@ -39,7 +39,11 @@ export interface CodeProps {
   children?: React.ReactNode;
   [key: string]: any;
 }
-
+export interface ChatWindowProps {
+  isSidebarOpen: boolean;
+  toggleSidebar: () => void;
+  isMobile: boolean;
+}
 // Action types for better type safety
 export type ServerActionResponse<T> = Promise<{
   data?: T;

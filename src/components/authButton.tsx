@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 export default function AuthButton() {
   const { data: session, status } = useSession();
-  console.log(session);
+  // console.log(session);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   if (status === 'loading') {

@@ -2,11 +2,14 @@
 import {
   MessageSquare,
   MoreVertical,
+  PanelLeftClose,
+  PanelLeftOpen,
   Plus,
   Settings,
   Trash,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+// import { Sidebar } from '@/components/ui/sidebar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import ChatWindow from '@/components/chat-window';
@@ -15,6 +18,7 @@ import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 // import { deleteConversation } from '@/lib/actions';
+import { useIsMobile } from '@/hooks/useMobile';
 export default function ChatLayout() {
   const {
     conversations,
@@ -75,10 +79,48 @@ export default function ChatLayout() {
       toast.error('Failed to load conversations');
     }
   }, []);
+  //sidebar toggle
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
+  const isMobile = useIsMobile();
+  const sidebarRef = useRef<HTMLDivElement>(null);
+
+  // Handle clicks outside the sidebar on mobile
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (
+        isMobile &&
+        isSidebarOpen &&
+        sidebarRef.current &&
+        !sidebarRef.current.contains(event.target as Node)
+      ) {
+        setIsSidebarOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isMobile, isSidebarOpen, setIsSidebarOpen]);
+  // const isMobile = useIsMobile();
   return (
     <div className="flex h-screen">
       {/* Sidebar */}
-      <div className="w-64 bg-background border-r flex flex-col">
+      {/* Mobile overlay when sidebar is open */}
+      {isMobile && isSidebarOpen && (
+        <div className="fixed inset-0 bg-black/20 z-10" aria-hidden="true" />
+      )}
+      <div
+        ref={sidebarRef}
+        className={`${
+          isSidebarOpen
+            ? 'min-w-64 opacity-100 translate-x-0'
+            : 'w-0 opacity-0 -translate-x-full'
+        } ${
+          isMobile ? 'z-10 min-w-72 absolute bottom-0 top-0' : ''
+        } bg-background border-r flex flex-col transition-all duration-300 ease-in-out overflow-hidden`}
+      >
         <div className="p-4">
           <Button
             onClick={handleNewChat}
@@ -141,7 +183,11 @@ export default function ChatLayout() {
       </div>
 
       {/* Main Chat Area */}
-      <ChatWindow />
+      {/* <ChatWindow
+        isSidebarOpen={isSidebarOpen}
+        isMobile={isMobile}
+        toggleSidebar={toggleSidebar}
+      /> */}
 
       {/* Delete Confirmation Dialog */}
       {deleteDialogOpen && (
