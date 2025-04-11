@@ -40,14 +40,23 @@ export default function ChatWindow() {
   ];
   const { data: session } = useSession();
   // console.log(session);
-  const { selectedConversation, sendMessage, isLoading, model, setModel } =
-    useChatStore();
+  const {
+    selectedConversation,
+    sendMessage,
+    isLoading,
+    model,
+    setModel,
+    error,
+  } = useChatStore();
   const [input, setInput] = useState('');
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
-
-    await sendMessage(text);
-    setInput(''); // Clear input after sending
+    try {
+      await sendMessage(text);
+      setInput(''); // Clear input after sending
+    } catch (error) {
+      console.error('Error:', error);
+    }
   };
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
@@ -129,6 +138,11 @@ export default function ChatWindow() {
           {isSidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
         </button>
       )} */}
+      {error && (
+        <div className="absolute top-0 left-0 right-0 bg-red-500 text-white p-4 text-center z-10">
+          {error}
+        </div>
+      )}
       <div className="flex flex-1 flex-col h-screen ">
         <div className="border-b p-4 text-center ">
           {/* <SidebarTrigger /> */}

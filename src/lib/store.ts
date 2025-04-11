@@ -199,10 +199,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             }
           : null,
       }));
-      // const updatedMessages = [...selectedConversation.messages, userMessage];
-
-      // TODO: Integrate with your AI service here
-      const modelResponse = await aiResponse(text, get().model);
+      // const modelResponse = await aiResponse(text, get().model);
+      const modelResponse = await fetch('/api/test', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ prompt: text }),
+      });
       if (!modelResponse) {
         // Add an error message to the chat instead of deleting the user message
         const errorMessage: Message = {
@@ -225,10 +227,55 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         }));
         return;
       }
+      const reader = modelResponse?.body
+        ? modelResponse.body.getReader()
+        : null;
+      let aiMessageText = '';
+      const tempMessageId = `temp-${Date.now()}`;
+      set((state) => ({
+        selectedConversation: state.selectedConversation
+          ? {
+              ...state.selectedConversation,
+              messages: [
+                ...state.selectedConversation.messages,
+                {
+                  id: tempMessageId,
+                  conversationId: state.selectedConversation.id,
+                  text: '',
+                  sender: 'bot',
+                  createdAt: new Date(),
+                },
+              ],
+            }
+          : null,
+      }));
+      // Read the stream and update UI incrementally
+      while (true) {
+        if (!reader) {
+          throw new Error('Reader is null');
+        }
+        const { done, value } = await reader.read();
+        if (done) break;
+        const chunk = new TextDecoder().decode(value);
+        aiMessageText += chunk;
+        set((state) => {
+          if (!state.selectedConversation) return state;
+          const messages = state.selectedConversation.messages.map((msg) =>
+            msg.id === tempMessageId ? { ...msg, text: aiMessageText } : msg
+          );
+          return {
+            selectedConversation: {
+              ...state.selectedConversation,
+              messages,
+            },
+          };
+        });
+      }
+
       // Save AI response
       const assistantMessageResponse = await addMessageToConversation(
         selectedConversation.id,
-        modelResponse,
+        aiMessageText,
         'bot'
       );
       if (assistantMessageResponse.error) {
@@ -241,13 +288,16 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           selectedConversation: state.selectedConversation
             ? {
                 ...state.selectedConversation,
-                messages: [...state.selectedConversation.messages, aiMessage],
+                // messages: [...state.selectedConversation.messages, aiMessage],
+                messages: state.selectedConversation.messages.map((msg) =>
+                  msg.id === tempMessageId ? aiMessage : msg
+                ),
               }
             : null,
         }));
       }
     } catch (error) {
-      set({ error: 'Failed to send message' });
+      set({ error: typeof error === 'string' ? error : String(error) });
     } finally {
       set({ isLoading: false });
     }

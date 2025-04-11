@@ -38,11 +38,11 @@ const PROVIDER_CONFIGS: Record<
   // }
 };
 export async function aiResponse(prompt: string, selectedModel: string) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    console.error('unauthenticated!!!');
-    return;
-  }
+  // const session = await getServerSession(authOptions);
+  // if (!session) {
+  //   console.error('unauthenticated!!!');
+  //   return;
+  // }
   const modelConfig = MODEL_CONFIGS[selectedModel];
   if (!modelConfig) {
     console.error(`Unknown model: ${selectedModel}`);
@@ -59,17 +59,32 @@ export async function aiResponse(prompt: string, selectedModel: string) {
       apiKey: apiKey,
       baseURL: providerConfig.baseURL,
     });
-    // console.log(selectedModel);
-    // Use the chat.completions.create method to generate a response
-    const completion = await openai.chat.completions.create({
+    const stream = await openai.chat.completions.create({
       model: selectedModel,
       messages: [{ role: 'user', content: prompt }],
+      stream: true,
     });
-    // console.log(completion);
-    return completion.choices[0].message.content;
+    const readableStream = new ReadableStream({
+      async start(controller) {
+        try {
+          for await (const chunk of stream) {
+            const content = chunk.choices[0]?.delta?.content || '';
+            if (content) {
+              controller.enqueue(new TextEncoder().encode(content));
+            }
+          }
+          controller.close();
+        } catch (error) {
+          controller.error(error);
+        }
+      },
+    });
+    return new Response(readableStream, {
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+    });
   } catch (error) {
     console.error('Error generating AI response:', error);
-    throw new Error('Failed to generate AI response');
+    return new Response('Failed to generate AI response', { status: 500 });
   }
 }
 

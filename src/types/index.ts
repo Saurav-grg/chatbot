@@ -14,6 +14,7 @@ export interface Conversation {
   userId: string;
   title: string;
   messages: Message[];
+  // messages: (Message | undefined)[];
   createdAt: Date;
   updatedAt: Date;
 }
