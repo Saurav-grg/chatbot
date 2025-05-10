@@ -38,21 +38,20 @@ const PROVIDER_CONFIGS: Record<
   // }
 };
 export async function aiResponse(prompt: string, selectedModel: string) {
-  // const session = await getServerSession(authOptions);
-  // if (!session) {
-  //   console.error('unauthenticated!!!');
-  //   return;
-  // }
+  const session = await getServerSession(authOptions);
+  if (!session) {
+    return { error: 'unauthenticated!!!' };
+  }
   const modelConfig = MODEL_CONFIGS[selectedModel];
   if (!modelConfig) {
-    console.error(`Unknown model: ${selectedModel}`);
-    return;
+    return { error: `Unknown model: ${selectedModel}` };
+    // console.error(`Unknown model: ${selectedModel}`);
+    // return;
   }
   const providerConfig = PROVIDER_CONFIGS[modelConfig.provider];
   const apiKey = providerConfig.envKey;
   if (!apiKey) {
-    console.error(`${providerConfig.envKey} is not defined`);
-    return;
+    return { error: `${providerConfig.envKey} is not defined` };
   }
   try {
     const openai = new OpenAI({

@@ -1,20 +1,11 @@
 'use client';
-import { useRef, useState } from 'react';
-import {
-  Check,
-  ChevronDown,
-  SendHorizontal,
-  PanelLeftClose,
-  PanelLeftOpen,
-} from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
+import { Check, ChevronDown, SendHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Textarea } from '@/components/ui/textarea';
 import { useChatStore } from '@/lib/store';
-// import Markdown from 'react-markdown';
-// import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-// import { dark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,8 +15,7 @@ import {
 // import { ChatWindowProps } from '@/types';
 import { useSession } from 'next-auth/react';
 import MarkdownRenderer from './mdRenderer';
-import { SidebarTrigger } from './ui/sidebar';
-
+import { motion } from 'framer-motion';
 export default function ChatWindow() {
   const models = [
     { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google' },
@@ -59,7 +49,22 @@ export default function ChatWindow() {
     }
   };
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const lastMessageRef = useRef<HTMLDivElement>(null);
 
+  useEffect(() => {
+    if (lastMessageRef.current) {
+      // Use scrollIntoView for reliable scrolling
+      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+    } else if (scrollAreaRef.current) {
+      // Fallback to scrollTop
+      requestAnimationFrame(() => {
+        if (scrollAreaRef.current) {
+          scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+        }
+      });
+    }
+  }, [selectedConversation?.messages]);
   // Function to adjust textarea height
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -69,108 +74,165 @@ export default function ChatWindow() {
       // console.log(textarea.scrollHeight);
     }
   };
-  // useEffect(() => {
-  //   adjustHeight();
-  // }, [input]);
+  useEffect(() => {
+    adjustHeight();
+  }, [input]);
+
   if (!selectedConversation)
     return (
       <>
-        {/* <button
-          className={`absolute top-[12px] ${
-            isSidebarOpen ? 'left-[265px]' : 'left-4'
-          } p-2 border rounded-full bg-background shadow-sm transition-all duration-300 z-10 hover:bg-accent`}
-          onClick={toggleSidebar}
-        >
-          {isSidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
-        </button> */}
         <div className="flex flex-col items-center justify-center h-full w-full text-center">
           {/* <SidebarTrigger /> */}
-
-          <h2 className="text-3xl font-bold mb-4">Welcome to the Chat</h2>
+          <h2 className="text-3xl font-bold mb-4 text-white">
+            Welcome to the Chat
+          </h2>
           <p className="text-lg text-muted-foreground mb-8">
             Select a conversation to start chatting or create a new one.
           </p>
-          <div className="w-full max-w-md">
-            <Textarea
-              disabled={isLoading}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                adjustHeight(); // Adjust height on every change
-              }}
-              placeholder="Type your message to start a new conversation..."
-              className="min-h-[100px] max-h-[400px] mb-4 pb-12 resize-none"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(input);
-                }
-              }}
-            />
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="w-full max-w-md"
+          >
+            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-1 backdrop-blur-xl">
+              <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-pink-500/10 opacity-50"></div>
+              <div className="absolute inset-0 -z-10 rounded-xl bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0)_70%)]"></div>
+              <Textarea
+                disabled={isLoading}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  adjustHeight(); // Adjust height on every change
+                }}
+                placeholder="Type your message to start a new conversation..."
+                className="min-h-[120px] bg-red-200 resize-none border-0 bg-transparent text-white placeholder:text-gray-400 
+              focus-visible:ring-0 focus-visible:ring-offset-0"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(input);
+                  }
+                }}
+              />
+            </div>
             <Button onClick={() => handleSendMessage(input)} className="w-full">
               <SendHorizontal className="h-5 w-5 mr-2" />
               Start New Conversation
             </Button>
-          </div>
+          </motion.div>
+          {/* <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="w-full max-w-md"
+          >
+            <div className="relative mb-6 overflow-hidden rounded-xl border border-white/10 bg-black/40 p-1 backdrop-blur-xl">
+              <div className="absolute inset-0 rounded-xl bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-pink-500/10 opacity-50"></div>
+              <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0)_70%)]"></div>
+              {isLoading && <div> loading</div>}
+              <Textarea
+                disabled={isLoading}
+                value={input}
+                onChange={(e) => {
+                  setInput(e.target.value);
+                  adjustHeight(); // Adjust height on every change
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(input);
+                  }
+                }}
+                placeholder="Type your message to start a new conversation..."
+                className="min-h-[120px] resize-none border-0 bg-transparent text-white placeholder:text-gray-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+              />
+
+              <div className="flex items-center justify-between p-2">
+                <div className="flex space-x-2">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-gray-400 hover:bg-white/10 hover:text-white"
+                  >
+                    <Sparkles className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 rounded-full text-gray-400 hover:bg-white/10 hover:text-white"
+                  >
+                    <Wand2 className="h-4 w-4" />
+                  </Button>
+                </div>
+
+                <motion.div
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                >
+                  <Button className="group relative overflow-hidden rounded-full bg-gradient-to-r from-purple-600 to-blue-600 px-6 py-2 font-medium text-white shadow-lg shadow-purple-500/20 transition-all hover:shadow-xl hover:shadow-purple-500/40">
+                    <span className="relative z-10 flex items-center">
+                      Send <Send className="ml-2 h-4 w-4" />
+                    </span>
+                    <span className="absolute inset-0 z-0 bg-gradient-to-r from-blue-600 to-purple-600 opacity-0 transition-opacity duration-300 group-hover:opacity-100"></span>
+                  </Button>
+                </motion.div>
+              </div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.6 }}
+              className="flex items-center justify-center space-x-2 text-sm text-gray-400"
+            >
+              <Zap className="h-4 w-4 text-yellow-400" />
+              <span>Powered by advanced AI technology</span>
+            </motion.div>
+          </motion.div> */}
         </div>
       </>
     );
 
   return (
     <>
-      {/* {isMobile && !isSidebarOpen ? (
-        <button
-          className={`absolute top-[12px] ${
-            isSidebarOpen ? 'left-[265px]' : 'left-4'
-          } p-2 border rounded-full bg-background shadow-sm transition-all duration-300 z-10 hover:bg-accent`}
-          onClick={toggleSidebar}
-        >
-          {isSidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
-        </button>
-      ) : null}
-      {!isMobile && (
-        <button
-          className={`absolute top-[12px] ${
-            isSidebarOpen ? 'left-[265px]' : 'left-4'
-          } p-2 border rounded-full bg-background shadow-sm transition-all duration-300 z-10 hover:bg-accent`}
-          onClick={toggleSidebar}
-        >
-          {isSidebarOpen ? <PanelLeftClose /> : <PanelLeftOpen />}
-        </button>
-      )} */}
       {error && (
         <div className="absolute top-0 left-0 right-0 bg-red-500 text-white p-4 text-center z-10">
           {error}
         </div>
       )}
       <div className="flex flex-1 flex-col h-screen ">
-        <div className="border-b p-4 text-center ">
+        <div className="border-b border-white/20  p-4 text-center ">
           {/* <SidebarTrigger /> */}
-          <h2 className="text-lg font-semibold">
+          <h2 className="text-lg font-semibold text-white">
             {selectedConversation.title}
           </h2>
         </div>
 
-        <ScrollArea className="flex-1 p-4 w-3/4 mx-auto">
+        <ScrollArea className="flex-1 p-4 w-3/4 mx-auto" ref={scrollAreaRef}>
           <div className="space-y-8">
-            {selectedConversation.messages.map((message) => (
+            {selectedConversation.messages.map((message, index) => (
               <div
                 key={message.id}
+                ref={
+                  index === selectedConversation.messages.length - 1
+                    ? lastMessageRef
+                    : null
+                }
                 className={` ${
                   message.sender === 'user' ? 'w-3/4 ml-auto' : 'w-full'
                 }`}
-                // className="flex"
               >
                 <div
                   className={`max-w-[95%] mx-auto ${
                     message.sender === 'user'
-                      ? 'bg-primary/90 text-primary-foreground px-2 py-4 rounded-3xl'
-                      : 'ring-1 p-1 rounded-xl'
+                      ? 'bg-gradient-to-br from-purple-600 to-blue-600 text-primary-foreground px-2 py-4 rounded-3xl'
+                      : 'ring-1 ring-white/10  p-1 rounded-xl'
                   }`}
                 >
                   {message.sender === 'user' ? (
                     <div className="flex gap-2 items-start">
-                      {session?.user?.image ? (
+                      {session?.user.image ? (
                         <Image
                           src={session.user.image}
                           alt={session.user.name ?? 'User'}
@@ -180,13 +242,7 @@ export default function ChatWindow() {
                         />
                       ) : (
                         <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-700 font-bold">
-                          {session?.user?.name
-                            ? session.user.name
-                                .split(' ')
-                                .map((n) => n[0])
-                                .join('')
-                                .toUpperCase()
-                            : 'U'}
+                          X
                         </div>
                       )}
                       {message.text}
@@ -200,8 +256,9 @@ export default function ChatWindow() {
           </div>
         </ScrollArea>
 
-        <div className="p-2 w-3/4 mx-auto bg-gray-100 rounded-2xl">
-          <div className="">
+        <div className="px-2 py-1 w-3/4 mx-auto relative rounded-2xl ring-1 bg-transparent ring-white/20">
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r -z-10 from-purple-500/10 via-blue-500/10 to-pink-500/10 opacity-50"></div>
+          {/* <div className="">
             <textarea
               disabled={isLoading}
               ref={textareaRef}
@@ -220,10 +277,31 @@ export default function ChatWindow() {
                 }
               }}
             />
-          </div>
-          <div className="flex items-center justify-between bg-gray-100 p-2 rounded-xl">
+          </div> */}
+          {/* <div className="relative overflow-hidden"> */}
+          {/* <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-pink-500/10 opacity-50"></div>
+            <div className="absolute inset-0 -z-10 rounded-xl bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0)_70%)]"></div> */}
+          <Textarea
+            disabled={isLoading}
+            value={input}
+            onChange={(e) => {
+              setInput(e.target.value);
+              adjustHeight(); // Adjust height on every change
+            }}
+            placeholder="Type your message..."
+            className="min-h-[100px] bg-red-200 resize-none border-0 bg-transparent text-white placeholder:text-gray-400 
+              focus-visible:ring-0 focus-visible:ring-offset-0"
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                handleSendMessage(input);
+              }
+            }}
+          />
+          {/* </div> */}
+          <div className="flex items-center justify-between px-2 py-1 rounded-xl">
             <DropdownMenu>
-              <DropdownMenuTrigger className="flex ring-1 ring-gray-400 items-center gap-1 text-xs p-2 rounded-md bg-muted hover:bg-muted/80 transition-colors">
+              <DropdownMenuTrigger className="flex ring-1 ring-gray-400 items-center gap-1 text-xs p-2 rounded-md text-white transition-colors">
                 <span>{models.find((m) => m.id === model)?.name}</span>
                 <ChevronDown className="h-3 w-3" />
               </DropdownMenuTrigger>
@@ -246,7 +324,7 @@ export default function ChatWindow() {
             <button>
               <SendHorizontal
                 onClick={() => handleSendMessage(input)}
-                className="h-5 w-5 mr-2"
+                className="h-5 w-5 mr-2 text-white"
               />
             </button>
           </div>
@@ -254,16 +332,4 @@ export default function ChatWindow() {
       </div>
     </>
   );
-}
-{
-  /* <Button
-            className="absolute right-2 "
-            onClick={() => handleSendMessage(input)}
-          >
-            {isLoading ? (
-              <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
-            ) : (
-              <SendHorizontal />
-            )}
-          </Button> */
 }

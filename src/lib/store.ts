@@ -91,26 +91,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
 
     return title;
   },
-
-  // createNewConversation: async () => {
-  //   set({ isLoading: true, error: null });
-  //   const title = `Conversation ${get().conversations.length + 1}`;
-  //   const response = await createConversation(title);
-
-  //   if (response.error) {
-  //     set({ error: response.error, isLoading: false });
-  //     return;
-  //   }
-
-  //   if (response.data) {
-  //     set((state) => ({
-  //       conversations: [...state.conversations, response.data!],
-  //       selectedConversation: response.data,
-  //       isLoading: false,
-  //     }));
-  //   }
-  // },
-
   loadUserConversations: async () => {
     set({ isLoading: true, error: null });
 
@@ -151,153 +131,146 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       }));
     }
   },
-  // Message actions
   sendMessage: async (text: string) => {
     set({ isLoading: true, error: null });
     try {
-      let { selectedConversation } = get();
-      if (!selectedConversation) {
-        const title = get().generateChatTitle(text);
+      // Helper: Ensure a conversation exists
+      const ensureConversationExists = async (): Promise<Conversation> => {
+        const state = get();
+        if (state.selectedConversation) return state.selectedConversation;
+        const title = state.generateChatTitle(text);
         const response = await createConversation(title);
+        if (response.error) throw new Error(response.error);
+        const newConversation = response.data!;
+        set((state) => ({
+          conversations: [...state.conversations, newConversation],
+          selectedConversation: newConversation,
+        }));
+        return newConversation;
+      };
 
-        if (response.error) {
-          set({ error: response.error, isLoading: false });
-          return;
-        }
-        if (response.data) {
+      // Helper: Send user message
+      const sendUserMessage = async (conversation: Conversation) => {
+        const response = await addMessageToConversation(
+          conversation.id,
+          text,
+          'user'
+        );
+        if (response.error) throw new Error(response.error);
+        const userMessage = response.data!;
+        set((state) => ({
+          selectedConversation: state.selectedConversation
+            ? {
+                ...state.selectedConversation,
+                messages: [...state.selectedConversation.messages, userMessage],
+              }
+            : null,
+        }));
+      };
+
+      // Helper: Stream AI response
+      const streamAIResponse = async (conversationId: string) => {
+        const modelResponse = await fetch('/api/test', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ prompt: text, selectedModel: get().model }),
+        });
+        if (!modelResponse || !modelResponse.body) {
+          const errorMessage: Message = {
+            id: `error-${Date.now()}`,
+            conversationId,
+            text: 'Sorry, I couldn’t respond right now.',
+            sender: 'bot',
+            createdAt: new Date(),
+          };
           set((state) => ({
-            conversations: [...state.conversations, response.data!],
-            selectedConversation: response.data,
+            selectedConversation: state.selectedConversation
+              ? {
+                  ...state.selectedConversation,
+                  messages: [
+                    ...state.selectedConversation.messages,
+                    errorMessage,
+                  ],
+                }
+              : null,
           }));
+          throw new Error('No response body');
         }
-        selectedConversation = get().selectedConversation;
-        if (!selectedConversation) {
-          set({ error: 'Failed to select new conversation', isLoading: false });
-          return;
-        }
-      }
-
-      // Send user message
-      const userMessageResponse = await addMessageToConversation(
-        selectedConversation.id,
-        text,
-        'user'
-      );
-
-      if (userMessageResponse.error) {
-        set({ error: userMessageResponse.error });
-        return;
-      }
-
-      // Update local state with user message
-      const userMessage = userMessageResponse.data!;
-      set((state) => ({
-        selectedConversation: state.selectedConversation
-          ? {
-              ...state.selectedConversation,
-              messages: [...state.selectedConversation.messages, userMessage],
-            }
-          : null,
-      }));
-      // const modelResponse = await aiResponse(text, get().model);
-      const modelResponse = await fetch('/api/test', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ prompt: text }),
-      });
-      if (!modelResponse) {
-        // Add an error message to the chat instead of deleting the user message
-        const errorMessage: Message = {
-          id: `error-${Date.now()}`, // Temporary ID
-          conversationId: selectedConversation.id,
-          text: 'Sorry, I couldn’t respond right now.',
-          sender: 'bot',
-          createdAt: new Date(), // Assuming Message type has timestamp
-        };
+        console.log(modelResponse.body);
+        const reader = modelResponse.body.getReader();
+        let aiMessageText = '';
+        const tempMessageId = `temp-${Date.now()}`;
         set((state) => ({
           selectedConversation: state.selectedConversation
             ? {
                 ...state.selectedConversation,
                 messages: [
                   ...state.selectedConversation.messages,
-                  errorMessage,
+                  {
+                    id: tempMessageId,
+                    conversationId,
+                    text: '',
+                    sender: 'bot',
+                    createdAt: new Date(),
+                  },
                 ],
               }
             : null,
         }));
-        return;
-      }
-      const reader = modelResponse?.body
-        ? modelResponse.body.getReader()
-        : null;
-      let aiMessageText = '';
-      const tempMessageId = `temp-${Date.now()}`;
-      set((state) => ({
-        selectedConversation: state.selectedConversation
-          ? {
-              ...state.selectedConversation,
-              messages: [
-                ...state.selectedConversation.messages,
-                {
-                  id: tempMessageId,
-                  conversationId: state.selectedConversation.id,
-                  text: '',
-                  sender: 'bot',
-                  createdAt: new Date(),
-                },
-              ],
-            }
-          : null,
-      }));
-      // Read the stream and update UI incrementally
-      while (true) {
-        if (!reader) {
-          throw new Error('Reader is null');
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          const chunk = new TextDecoder().decode(value);
+          aiMessageText += chunk;
+          set((state) => {
+            if (!state.selectedConversation) return state;
+            const messages = state.selectedConversation.messages.map((msg) =>
+              msg.id === tempMessageId ? { ...msg, text: aiMessageText } : msg
+            );
+            return {
+              selectedConversation: { ...state.selectedConversation, messages },
+            };
+          });
         }
-        const { done, value } = await reader.read();
-        if (done) break;
-        const chunk = new TextDecoder().decode(value);
-        aiMessageText += chunk;
-        set((state) => {
-          if (!state.selectedConversation) return state;
-          const messages = state.selectedConversation.messages.map((msg) =>
-            msg.id === tempMessageId ? { ...msg, text: aiMessageText } : msg
-          );
-          return {
-            selectedConversation: {
-              ...state.selectedConversation,
-              messages,
-            },
-          };
-        });
-      }
+        return { aiMessageText, tempMessageId };
+      };
 
-      // Save AI response
-      const assistantMessageResponse = await addMessageToConversation(
-        selectedConversation.id,
-        aiMessageText,
-        'bot'
-      );
-      if (assistantMessageResponse.error) {
-        set({ error: assistantMessageResponse.error });
-        return;
-      }
-      const aiMessage = assistantMessageResponse.data!;
-      if (assistantMessageResponse.data) {
+      // Helper: Save AI message
+      const saveAIMessage = async (
+        conversationId: string,
+        aiMessageText: string,
+        tempMessageId: string
+      ) => {
+        const response = await addMessageToConversation(
+          conversationId,
+          aiMessageText,
+          'bot'
+        );
+        if (response.error) throw new Error(response.error);
+        const aiMessage = response.data!;
         set((state) => ({
           selectedConversation: state.selectedConversation
             ? {
                 ...state.selectedConversation,
-                // messages: [...state.selectedConversation.messages, aiMessage],
                 messages: state.selectedConversation.messages.map((msg) =>
                   msg.id === tempMessageId ? aiMessage : msg
                 ),
               }
             : null,
         }));
-      }
+      };
+
+      // Execute the steps
+      const conversation = await ensureConversationExists();
+      await sendUserMessage(conversation);
+      const { aiMessageText, tempMessageId } = await streamAIResponse(
+        conversation.id
+      );
+      await saveAIMessage(conversation.id, aiMessageText, tempMessageId);
     } catch (error) {
-      set({ error: typeof error === 'string' ? error : String(error) });
+      set({ error: error instanceof Error ? error.message : String(error) });
     } finally {
       set({ isLoading: false });
     }

@@ -3,6 +3,8 @@ import {
   Sidebar,
   SidebarContent,
   SidebarFooter,
+  SidebarGroup,
+  SidebarGroupLabel,
   SidebarHeader,
 } from '@/components/ui/sidebar';
 import { useChatStore } from '@/lib/store';
@@ -85,13 +87,13 @@ export function AppSidebar() {
   //   //   const isMobile = useIsMobile();
   //   const sidebarRef = useRef<HTMLDivElement>(null);
   return (
-    <Sidebar>
+    <Sidebar className="border-white/20 bg-black backdrop-blur-md text-white">
       <SidebarHeader>
-        <div className="px-2 pt-2 flex items-center gap-2">
+        <div className="px-2 pt-2 flex items-center gap-2 ">
           <Button
             onClick={handleNewChat}
-            className="w-full justify-start"
-            variant="outline"
+            className="w-full justify-start bg-gradient-to-br from-purple-600 to-blue-600"
+            // variant="outline"
           >
             <Plus className="mr-2 h-4 w-4" />
             New Chat
@@ -99,66 +101,74 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <div className="space-y-2 pl-4 pt-2 pb-4">
-          {conversations.map((chat) => (
-            <div key={chat.id} className="flex items-center group relative">
-              <button
-                className={`w-full flex items-center text-left px-3 py-2 text-sm rounded-md ${
+        <SidebarGroup>
+          <SidebarGroupLabel className="text-xs font-semibold text-gray-400">
+            YOUR CHATS
+          </SidebarGroupLabel>
+          <div className="space-y-2 pl-4 pt-2 pb-4">
+            {conversations.map((chat) => (
+              <div key={chat.id} className="flex items-center group relative">
+                {/* 
+              ${
                   selectedConversation?.id === chat.id
                     ? 'bg-gray-200 dark:bg-gray-800'
                     : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                } transition-colors`}
-                onClick={() => selectConversation(chat)}
-              >
-                <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
-                <span className="truncate">{chat.title}</span>
-              </button>
-              <button
-                onClick={(e) => toggleMenu(chat.id, e)}
-                className={`absolute right-2 p-1 rounded-md opacity-0 group-hover:opacity-100
+                }  */}
+                <button
+                  className={`w-full flex items-center text-left px-3 py-2 text-sm rounded-md 
+                transition-colors`}
+                  onClick={() => selectConversation(chat)}
+                >
+                  <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
+                  <span className="truncate">{chat.title}</span>
+                </button>
+                <button
+                  onClick={(e) => toggleMenu(chat.id, e)}
+                  className={`absolute right-2 p-1 rounded-md opacity-0 group-hover:opacity-100
                     ${
                       selectedConversation?.id === chat.id
                         ? 'hover:bg-gray-300 dark:hover:bg-gray-700'
                         : 'hover:bg-gray-200'
                     }
                       transition-opacity`}
-              >
-                <MoreVertical className="h-4 w-4" />
-              </button>
-
-              {openMenuId === chat.id && (
-                <div
-                  ref={menuRef}
-                  className="absolute right-[-80px] top-0 mt-1 w-36 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50"
                 >
-                  <div className="py-1">
-                    <button
-                      onClick={(e) => handleDeleteClick(chat.id, e)}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <Trash className="mr-2 h-4 w-4" />
-                      Delete
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteClick(chat.id, e)}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <Trash className="mr-2 h-4 w-4" />
-                      Delete
-                    </button>
-                    <button
-                      onClick={(e) => handleDeleteClick(chat.id, e)}
-                      className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    >
-                      <Trash className="mr-2 h-4 w-4" />
-                      Delete
-                    </button>
+                  <MoreVertical className="h-4 w-4" />
+                </button>
+
+                {openMenuId === chat.id && (
+                  <div
+                    ref={menuRef}
+                    className="absolute right-[-80px] top-0 mt-1 w-36 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50"
+                  >
+                    <div className="py-1">
+                      <button
+                        onClick={(e) => handleDeleteClick(chat.id, e)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <Trash className="mr-2 h-4 w-4" />
+                        Delete
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteClick(chat.id, e)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <Trash className="mr-2 h-4 w-4" />
+                        Delete
+                      </button>
+                      <button
+                        onClick={(e) => handleDeleteClick(chat.id, e)}
+                        className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700"
+                      >
+                        <Trash className="mr-2 h-4 w-4" />
+                        Delete
+                      </button>
+                    </div>
                   </div>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </SidebarGroup>
       </SidebarContent>
       {/* </div> */}
       <SidebarFooter>
