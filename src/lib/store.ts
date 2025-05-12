@@ -175,7 +175,11 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({ prompt: text, selectedModel: get().model }),
+          body: JSON.stringify({
+            prompt: text,
+            selectedModel: get().model,
+            conversationId,
+          }),
         });
         if (!modelResponse || !modelResponse.body) {
           const errorMessage: Message = {
@@ -198,7 +202,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           }));
           throw new Error('No response body');
         }
-        console.log(modelResponse.body);
+        // console.log(modelResponse.body);
         const reader = modelResponse.body.getReader();
         let aiMessageText = '';
         const tempMessageId = `temp-${Date.now()}`;

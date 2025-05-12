@@ -15,6 +15,7 @@ const nextConfig: NextConfig = {
       bodySizeLimit: undefined,
       allowedOrigins: undefined,
     },
+    reactCompiler: true,
   },
 };
 

@@ -5,16 +5,6 @@ import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 export default function Home() {
-  const [cursorPosition, setCursorPosition] = useState({ x: 0, y: 0 });
-
-  // Track cursor position for the glow effect
-  useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
-      setCursorPosition({ x: e.clientX, y: e.clientY });
-    };
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
   return (
     <div className="h-screen relative overflow-hidden">
       <SidebarTrigger className="absolute top-[20px] text-white/60 left-2" />
@@ -22,35 +12,9 @@ export default function Home() {
       <div className="absolute inset-0 bg-black -z-20" />
       <div className="absolute inset-0 -z-10">
         {/* Gradient orbs */}
-        <div
-          className="absolute top-1/4 -left-20 h-[300px] w-[300px] rounded-full bg-purple-500/30 blur-[100px]"
-          style={{
-            transform: `translate(${cursorPosition.x * 0.02}px, ${
-              cursorPosition.y * 0.02
-            }px)`,
-          }}
-        />
-        <div
-          className="absolute bottom-1/4 -right-20 h-[400px] w-[400px] rounded-full bg-cyan-500/30 blur-[100px]"
-          style={{
-            transform: `translate(${-cursorPosition.x * 0.01}px, ${
-              -cursorPosition.y * 0.01
-            }px)`,
-          }}
-        />
-        <div
-          className="absolute top-1/2 left-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-500/20 blur-[80px]"
-          style={{
-            transform: `translate(calc(-50% + ${
-              cursorPosition.x * 0.03
-            }px), calc(-50% + ${cursorPosition.y * 0.03}px))`,
-          }}
-        />
-        {/* Grid pattern */}
-        {/* <div
-          className="absolute inset-0 bg-[linear-gradient(rgba(255,255,255,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.05)_1px,transparent_1px)] 
-        bg-[size:40px_40px]"
-        ></div> */}
+        <div className="absolute top-1/4 -left-20 h-[300px] w-[300px] rounded-full bg-purple-500/30 blur-[100px]" />
+        <div className="absolute bottom-1/4 -right-20 h-[400px] w-[400px] rounded-full bg-cyan-500/30 blur-[100px]" />
+        <div className="absolute top-1/2 left-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-500/20 blur-[80px]" />
         <ParticleField />
       </div>
       {/* <Sidebar /> */}

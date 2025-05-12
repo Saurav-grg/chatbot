@@ -1,46 +1,14 @@
 // app/api/test-action/route.ts
-import { NextRequest, NextResponse } from 'next/server';
-// import { aiResponse } from '@/lib/actions';
+import { NextRequest } from 'next/server';
 import { ModelProvider } from '@/types';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 import OpenAI from 'openai';
-
-// export async function POST(request: Request) {
-//   // Parse the JSON body from the request
-//   const body = await request.json();
-//   const userInput = body.prompt;
-
-//   // Validate the prompt
-//   if (!userInput || typeof userInput !== 'string') {
-//     return NextResponse.json(
-//       { error: 'Prompt must be a non-empty string' },
-//       { status: 400 }
-//     );
-//   }
-
-//   // Call the aiResponse function
-//   const response = await aiResponse(userInput, 'gemini-1.5-flash');
-
-//   // Check if aiResponse returned a valid Response object
-//   if (!(response instanceof Response)) {
-//     return NextResponse.json(
-//       { error: 'Failed to generate AI response' },
-//       { status: 500 }
-//     );
-//   }
-
-//   // console.log(response);
-//   // Return the streamed Response directly
-//   return response;
-// }
-
+import { fetchConversationMessages } from '@/lib/actions';
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {
     return new Response('Unauthorized', { status: 401 });
-    // NextResponse.json(
-    //   { error: 'unauthenticated!!!' },)
   }
   const MODEL_CONFIGS: Record<string, { provider: ModelProvider }> = {
     'gemini-1.5-flash': { provider: 'google' },
@@ -69,7 +37,10 @@ export async function POST(request: NextRequest) {
     // }
   };
   const body = await request.json();
-  const { prompt, selectedModel } = body;
+  const { prompt, selectedModel, conversationId } = body;
+  if (!conversationId) {
+    return new Response('conversationId is required', { status: 400 });
+  }
   const modelConfig = MODEL_CONFIGS[selectedModel];
   if (!modelConfig) {
     // return { error: `Unknown model: ${selectedModel}` };
@@ -84,13 +55,33 @@ export async function POST(request: NextRequest) {
     });
   }
   try {
+    const messagesResponse = await fetchConversationMessages(
+      conversationId,
+      20
+    );
+    if ('error' in messagesResponse) {
+      return new Response(messagesResponse.error, { status: 500 });
+    }
+    const recentMessages = messagesResponse.data!;
+    type MessageArr = {
+      role: 'user' | 'assistant';
+      content: string;
+    };
+    let messagesForAI: MessageArr[] = formatMessageForAi(
+      recentMessages.map((msg) => {
+        const role = msg.sender === 'user' ? 'user' : 'assistant';
+        return { role, content: msg.text };
+      })
+    );
+
+    messagesForAI.push({ role: 'user', content: prompt });
     const openai = new OpenAI({
       apiKey: apiKey,
       baseURL: providerConfig.baseURL,
     });
     const stream = await openai.chat.completions.create({
       model: selectedModel,
-      messages: [{ role: 'user', content: prompt }],
+      messages: messagesForAI,
       stream: true,
     });
     const readableStream = new ReadableStream({
@@ -115,4 +106,43 @@ export async function POST(request: NextRequest) {
     console.error('Error generating AI response:', error);
     return new Response('Failed to generate AI response', { status: 500 });
   }
+}
+//function
+type MessageArr = { role: 'user' | 'assistant'; content: string };
+
+function formatMessageForAi(messages: MessageArr[]): MessageArr[] {
+  const formattedMessages: MessageArr[] = [];
+
+  // If the input array is empty, return an empty array or initialize with a default user message
+  if (messages.length === 0) {
+    return [];
+  }
+
+  // Ensure the first message is from a user
+  if (messages[0].role !== 'user') {
+    formattedMessages.push({ role: 'user', content: 'Conversation started' });
+    formattedMessages.push({
+      role: 'assistant',
+      content: 'Hello! How can I assist you?',
+    });
+  }
+
+  // Process each message
+  for (let i = 0; i < messages.length; i++) {
+    const currentMessage = messages[i];
+
+    // Add the current message to the formatted array
+    formattedMessages.push(currentMessage);
+
+    // If the current message is from a user
+    if (currentMessage.role === 'user') {
+      // Check if there's a next message and if it's not an assistant
+      if (i === messages.length - 1 || messages[i + 1]?.role !== 'assistant') {
+        // Insert a default assistant message
+        formattedMessages.push({ role: 'assistant', content: 'no response' });
+      }
+    }
+  }
+
+  return formattedMessages;
 }

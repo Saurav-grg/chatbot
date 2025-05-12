@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-// import { ChatWindowProps } from '@/types';
 import { useSession } from 'next-auth/react';
 import MarkdownRenderer from './mdRenderer';
 import { motion } from 'framer-motion';
@@ -258,29 +257,6 @@ export default function ChatWindow() {
 
         <div className="px-2 py-1 w-3/4 mx-auto relative rounded-2xl ring-1 bg-transparent ring-white/20">
           <div className="absolute inset-0 rounded-2xl bg-gradient-to-r -z-10 from-purple-500/10 via-blue-500/10 to-pink-500/10 opacity-50"></div>
-          {/* <div className="">
-            <textarea
-              disabled={isLoading}
-              ref={textareaRef}
-              value={input}
-              onChange={(e) => {
-                setInput(e.target.value);
-                adjustHeight(); // Adjust height on every change
-              }}
-              placeholder="Type your message..."
-              // style={{ border: 'none !important', outline: 'none !important' }}
-              className="min-h-[100px] w-full focus:outline-0 rounded-xl p-2 pr-6 bg-gray-100 resize-none overflow-y-auto"
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !e.shiftKey) {
-                  e.preventDefault();
-                  handleSendMessage(input);
-                }
-              }}
-            />
-          </div> */}
-          {/* <div className="relative overflow-hidden"> */}
-          {/* <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-pink-500/10 opacity-50"></div>
-            <div className="absolute inset-0 -z-10 rounded-xl bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0)_70%)]"></div> */}
           <Textarea
             disabled={isLoading}
             value={input}
@@ -298,7 +274,6 @@ export default function ChatWindow() {
               }
             }}
           />
-          {/* </div> */}
           <div className="flex items-center justify-between px-2 py-1 rounded-xl">
             <DropdownMenu>
               <DropdownMenuTrigger className="flex ring-1 ring-gray-400 items-center gap-1 text-xs p-2 rounded-md text-white transition-colors">

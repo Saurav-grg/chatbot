@@ -1,7 +1,7 @@
 'use client';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-import { cn } from '@/lib/utils';
+// import { cn } from '@/lib/utils';
 import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
@@ -11,12 +11,9 @@ interface MarkdownRendererProps {
   className?: string;
 }
 
-export default function MarkdownRenderer({
-  content,
-  className,
-}: MarkdownRendererProps) {
+export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (
-    <div className={cn('markdown-renderer py-2 px-4', className)}>
+    <div className="markdown-renderer py-2 px-4">
       <ReactMarkdown
         components={{
           h1: ({ node, ...props }) => (

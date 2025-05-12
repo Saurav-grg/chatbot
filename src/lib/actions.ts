@@ -161,29 +161,60 @@ export async function fetchUserConversations(): ServerActionResponse<
         userId: session?.user?.id,
       },
       include: {
-        messages: true,
+        messages: false,
       },
       orderBy: {
         updatedAt: 'desc',
       },
     });
 
-    return { data: conversations };
+    return {
+      data: conversations.map((conversation) => ({
+        ...conversation,
+        messages: [],
+      })),
+    };
   } catch (error) {
     console.error('Error fetching conversations:', error);
     return { error: 'Failed to fetch conversations' };
   }
 }
 
+// export async function fetchConversationMessages(
+//   conversationId: string
+// ): ServerActionResponse<Message[]> {
+//   try {
+//     const session = await getServerSession(authOptions);
+//     if (!session) {
+//       return { error: 'unauthenticated!!!' };
+//     }
+//     const messages = await prisma.message.findMany({
+//       where: {
+//         conversationId,
+//         conversation: {
+//           userId: session?.user?.id,
+//         },
+//       },
+//       orderBy: {
+//         createdAt: 'asc',
+//       },
+//     });
+//     return { data: messages };
+//   } catch (error) {
+//     console.error('Error fetching messages:', error);
+//     return { error: 'Failed to fetch messages' };
+//   }
+// }
 export async function fetchConversationMessages(
-  conversationId: string
+  conversationId: string,
+  limit?: number
 ): ServerActionResponse<Message[]> {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return { error: 'unauthenticated!!!' };
     }
-    const messages = await prisma.message.findMany({
+    const queryOptions = {
       where: {
         conversationId,
         conversation: {
@@ -191,11 +222,24 @@ export async function fetchConversationMessages(
         },
       },
       orderBy: {
-        createdAt: 'asc',
+        createdAt: 'asc' as const,
       },
-    });
-
-    return { data: messages };
+    };
+    if (limit) {
+      console.log('limit:' + limit);
+      // Fetch the last 'limit' messages by ordering descending, then reverse for chronological order
+      const recentMessages = await prisma.message.findMany({
+        ...queryOptions,
+        orderBy: { createdAt: 'desc' as const },
+        take: limit,
+      });
+      const chronologicalMessages = recentMessages.reverse();
+      return { data: chronologicalMessages };
+    } else {
+      const messages = await prisma.message.findMany(queryOptions);
+      // console.log('no limit' + messages.map((msg) => msg.text));
+      return { data: messages };
+    }
   } catch (error) {
     console.error('Error fetching messages:', error);
     return { error: 'Failed to fetch messages' };
