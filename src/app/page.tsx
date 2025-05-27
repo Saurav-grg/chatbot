@@ -1,83 +1,86 @@
 'use client';
-import ChatWindow from '@/components/chat-window';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { useEffect, useState } from 'react';
+import { useChatStore } from '@/lib/store';
+import { useRef, useState } from 'react';
 import { motion } from 'framer-motion';
+import { Textarea } from '@/components/ui/textarea';
+import { Button } from '@/components/ui/button';
+import { SendHorizontal } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  return (
-    <div className="h-screen relative overflow-hidden">
-      <SidebarTrigger className="absolute top-[20px] text-white/60 left-2" />
-      {/* Animated background elements */}
-      <div className="absolute inset-0 bg-black -z-20" />
-      <div className="absolute inset-0 -z-10">
-        {/* Gradient orbs */}
-        <div className="absolute top-1/4 -left-20 h-[300px] w-[300px] rounded-full bg-purple-500/30 blur-[100px]" />
-        <div className="absolute bottom-1/4 -right-20 h-[400px] w-[400px] rounded-full bg-cyan-500/30 blur-[100px]" />
-        <div className="absolute top-1/2 left-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-500/20 blur-[80px]" />
-        <ParticleField />
-      </div>
-      {/* <Sidebar /> */}
-      <ChatWindow />
-    </div>
-  );
-}
-// Animated particle field component
-function ParticleField() {
-  const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-  // Set dimensions only on the client side
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-
-      // Update dimensions on window resize
-      const handleResize = () => {
-        setDimensions({
-          width: window.innerWidth,
-          height: window.innerHeight,
-        });
-      };
-
-      window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+  const {
+    selectedConversation,
+    sendMessage,
+    isLoading,
+    model,
+    setModel,
+    error,
+  } = useChatStore();
+  const router = useRouter();
+  const [input, setInput] = useState('');
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim()) return;
+    try {
+      await sendMessage(text);
+      setInput(''); // Clear input after sending
+      if (selectedConversation?.id) {
+        router.push(`/chat/${selectedConversation.id}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
     }
-  }, []);
-
-  // Don't render particles until dimensions are set
-  if (dimensions.width === 0 || dimensions.height === 0) {
-    return null;
-  }
-
+  };
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const adjustHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      textarea.style.height = 'auto'; // Reset height
+      textarea.style.height = `${Math.min(textarea.scrollHeight, 370)}px`;
+    }
+  };
   return (
     <>
-      {Array.from({ length: 50 }).map((_, i) => (
+      <div className="flex flex-col items-center justify-center h-screen w-full text-center">
+        {/* <SidebarTrigger /> */}
+        <h2 className="text-3xl font-bold mb-4 text-white">
+          Welcome to the Chat
+        </h2>
+        <p className="text-lg text-muted-foreground mb-8">
+          Select a conversation to start chatting or create a new one.
+        </p>
         <motion.div
-          key={i}
-          className="absolute h-1 w-1 rounded-full bg-white"
-          initial={{
-            x: Math.random() * window.innerWidth,
-            y: Math.random() * window.innerHeight,
-            opacity: Math.random() * 0.5 + 0.3,
-            scale: Math.random() * 0.5 + 0.5,
-          }}
-          animate={{
-            y: [null, Math.random() * window.innerHeight],
-            x: [null, Math.random() * window.innerWidth],
-          }}
-          transition={{
-            duration: Math.random() * 20 + 20,
-            repeat: Number.POSITIVE_INFINITY,
-            ease: 'linear',
-          }}
-          style={{
-            filter: `blur(${Math.random() > 0.8 ? '1px' : '0px'})`,
-          }}
-        />
-      ))}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="w-full max-w-md"
+        >
+          <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-1 backdrop-blur-xl">
+            <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-pink-500/10 opacity-50"></div>
+            <div className="absolute inset-0 -z-10 rounded-xl bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0)_70%)]"></div>
+            <Textarea
+              disabled={isLoading}
+              value={input}
+              onChange={(e) => {
+                setInput(e.target.value);
+                adjustHeight(); // Adjust height on every change
+              }}
+              placeholder="Type your message to start a new conversation..."
+              className="min-h-[120px] bg-red-200 resize-none border-0 bg-transparent text-white placeholder:text-gray-400 
+              focus-visible:ring-0 focus-visible:ring-offset-0"
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSendMessage(input);
+                }
+              }}
+            />
+          </div>
+          <Button onClick={() => handleSendMessage(input)} className="w-full">
+            <SendHorizontal className="h-5 w-5 mr-2" />
+            Start New Conversation
+          </Button>
+        </motion.div>
+      </div>
     </>
   );
 }

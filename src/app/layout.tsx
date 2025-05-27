@@ -3,8 +3,9 @@ import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
 import { Toaster } from 'react-hot-toast';
-import { SidebarProvider } from '@/components/ui/sidebar';
+import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { AppSidebar } from '@/components/appSidebar';
+import ParticleField from '@/components/particleField';
 
 const geistSans = Geist({
   variable: '--font-geist-sans',
@@ -29,10 +30,10 @@ export default function RootLayout({
   return (
     <html lang="en">
       <head>
-        <script
+        {/* <script
           crossOrigin="anonymous"
           src="https://unpkg.com/react-scan/dist/auto.global.js"
-        />
+        /> */}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
@@ -40,7 +41,21 @@ export default function RootLayout({
         <Providers>
           <SidebarProvider>
             <AppSidebar />
-            <main className="flex-1">{children}</main>
+            <main className="w-full overflow-hidden">
+              <div className="relative ">
+                <SidebarTrigger className="absolute top-[20px] text-white/60 left-2" />
+                <div className="absolute inset-0 bg-black -z-20" />
+                {/* Animated background elements */}
+
+                <div className="absolute inset-0 -z-10">
+                  <div className="absolute top-1/4 -left-20 h-[300px] w-[300px] rounded-full bg-purple-500/30 blur-[100px]" />
+                  <div className="absolute bottom-1/4 -right-20 h-[400px] w-[400px] rounded-full bg-cyan-500/30 blur-[100px]" />
+                  <div className="absolute top-1/2 left-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-500/20 blur-[80px]" />
+                  <ParticleField />
+                </div>
+                {children}
+              </div>
+            </main>
           </SidebarProvider>
         </Providers>
         <Toaster />

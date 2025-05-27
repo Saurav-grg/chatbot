@@ -36,12 +36,21 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   setModel: (model) => set({ model }),
   // Conversation actions
   selectConversation: async (conversation: Conversation) => {
+    if (conversation.messages.length > 0) {
+      return;
+    }
     set({ isLoading: true, error: null });
     const response = await fetchConversationMessages(conversation.id);
     if (response.error) {
       set({ error: response.error, isLoading: false });
       return;
     }
+    // set((state) => ({
+    //   conversations: [...state.conversations, state.conversations.map((chat)=>
+    //   chat.id === conversation.id ? { ...chat, messages: response.data || [] } : chat
+    //   ) ]
+    //   isLoading: false,
+    // }));
     set({
       selectedConversation: { ...conversation, messages: response.data || [] },
       isLoading: false,
@@ -106,6 +115,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         conversations: response.data,
         isLoading: false,
       });
+      console.log(response.data);
     }
   },
   deleteUserConversation: async (conversationId: Conversation['id']) => {

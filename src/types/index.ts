@@ -14,7 +14,6 @@ export interface Conversation {
   userId: string;
   title: string;
   messages: Message[];
-  // messages: (Message | undefined)[];
   createdAt: Date;
   updatedAt: Date;
 }
@@ -28,6 +27,7 @@ export interface AIModelConfig {
 // Store state types
 export interface ChatStoreState {
   conversations: Conversation[];
+  // selectedConversation: Conversation['id'] | null;
   selectedConversation: Conversation | null;
   model: string;
   isLoading: boolean;

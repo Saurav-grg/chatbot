@@ -114,14 +114,15 @@ export function AppSidebar() {
                     ? 'bg-gray-200 dark:bg-gray-800'
                     : 'hover:bg-gray-100 dark:hover:bg-gray-800'
                 }  */}
-                <button
+                <Link
+                  href={`/chat/${chat.id}`}
                   className={`w-full flex items-center text-left px-3 py-2 text-sm rounded-md 
                 transition-colors`}
                   onClick={() => selectConversation(chat)}
                 >
                   <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
                   <span className="truncate">{chat.title}</span>
-                </button>
+                </Link>
                 <button
                   onClick={(e) => toggleMenu(chat.id, e)}
                   className={`absolute right-2 p-1 rounded-md opacity-0 group-hover:opacity-100

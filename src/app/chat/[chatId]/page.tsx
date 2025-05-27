@@ -1,21 +1,21 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
-import { Check, ChevronDown, SendHorizontal } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import Image from 'next/image';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Textarea } from '@/components/ui/textarea';
-import { useChatStore } from '@/lib/store';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+} from '@radix-ui/react-dropdown-menu';
+import { useChatStore } from '@/lib/store';
 import { useSession } from 'next-auth/react';
-import MarkdownRenderer from './mdRenderer';
-import { motion } from 'framer-motion';
-export default function ChatWindow() {
+import { Textarea } from '@/components/ui/textarea';
+import { useEffect, useRef, useState } from 'react';
+import MarkdownRenderer from '@/components/mdRenderer';
+// import { ScrollArea } from '@radix-ui/react-scroll-area';
+import { Check, ChevronDown, SendHorizontal } from 'lucide-react';
+import { ScrollArea } from '@/components/ui/scroll-area';
+
+export default function Chats() {
   const models = [
     { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google' },
     { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google' },
@@ -37,6 +37,13 @@ export default function ChatWindow() {
     setModel,
     error,
   } = useChatStore();
+  // useEffect(() => {
+
+  // }, [selectedConversation, router]);
+  if (!selectedConversation) {
+    window.location.href = '/';
+    return null; // or a loading spinner
+  }
   const [input, setInput] = useState('');
   const handleSendMessage = async (text: string) => {
     if (!text.trim()) return;
@@ -70,57 +77,6 @@ export default function ChatWindow() {
       textarea.style.height = `${Math.min(textarea.scrollHeight, 370)}px`;
     }
   };
-  // useEffect(() => {
-  //   adjustHeight();
-  // }, [input]);
-
-  if (!selectedConversation)
-    return (
-      <>
-        <div className="flex flex-col items-center justify-center h-full w-full text-center">
-          {/* <SidebarTrigger /> */}
-          <h2 className="text-3xl font-bold mb-4 text-white">
-            Welcome to the Chat
-          </h2>
-          <p className="text-lg text-muted-foreground mb-8">
-            Select a conversation to start chatting or create a new one.
-          </p>
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.3 }}
-            className="w-full max-w-md"
-          >
-            <div className="relative overflow-hidden rounded-xl border border-white/10 bg-black/40 p-1 backdrop-blur-xl">
-              <div className="absolute inset-0 -z-10 rounded-xl bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-pink-500/10 opacity-50"></div>
-              <div className="absolute inset-0 -z-10 rounded-xl bg-[radial-gradient(circle_at_50%_120%,rgba(120,119,198,0.3),rgba(255,255,255,0)_70%)]"></div>
-              <Textarea
-                disabled={isLoading}
-                value={input}
-                onChange={(e) => {
-                  setInput(e.target.value);
-                  adjustHeight(); // Adjust height on every change
-                }}
-                placeholder="Type your message to start a new conversation..."
-                className="min-h-[120px] bg-red-200 resize-none border-0 bg-transparent text-white placeholder:text-gray-400 
-              focus-visible:ring-0 focus-visible:ring-offset-0"
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSendMessage(input);
-                  }
-                }}
-              />
-            </div>
-            <Button onClick={() => handleSendMessage(input)} className="w-full">
-              <SendHorizontal className="h-5 w-5 mr-2" />
-              Start New Conversation
-            </Button>
-          </motion.div>
-        </div>
-      </>
-    );
-
   return (
     <>
       {error && (
@@ -128,7 +84,7 @@ export default function ChatWindow() {
           {error}
         </div>
       )}
-      <div className="flex flex-1 flex-col h-screen ">
+      <div className="flex flex-col h-screen w-full">
         <div className="border-b border-white/20  p-4 text-center ">
           {/* <SidebarTrigger /> */}
           <h2 className="text-lg font-semibold text-white">
@@ -136,7 +92,7 @@ export default function ChatWindow() {
           </h2>
         </div>
 
-        <ScrollArea className="flex-1 p-4 w-3/4 mx-auto" ref={scrollAreaRef}>
+        <ScrollArea className="p-4 w-3/4 mx-auto flex-1" ref={scrollAreaRef}>
           <div className="space-y-8">
             {selectedConversation.messages.map((message, index) => (
               <div
