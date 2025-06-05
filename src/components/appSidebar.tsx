@@ -81,13 +81,8 @@ export function AppSidebar() {
       toast.error('Failed to load conversations');
     }
   }, []);
-  //sidebar toggle
-  //   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  //   const toggleSidebar = () => setIsSidebarOpen(!isSidebarOpen);
-  //   //   const isMobile = useIsMobile();
-  //   const sidebarRef = useRef<HTMLDivElement>(null);
   return (
-    <Sidebar className="border-white/20 bg-black backdrop-blur-md text-white">
+    <Sidebar className="border-white/20 bg-black backdrop-blur-md text-white z-10">
       <SidebarHeader>
         <div className="px-2 pt-2 flex items-center gap-2 ">
           <Button
@@ -105,18 +100,19 @@ export function AppSidebar() {
           <SidebarGroupLabel className="text-xs font-semibold text-gray-400">
             YOUR CHATS
           </SidebarGroupLabel>
-          <div className="space-y-2 pl-4 pt-2 pb-4">
+          <div className="space-y-2 pl-1 pt-1 pb-4">
             {conversations.map((chat) => (
-              <div key={chat.id} className="flex items-center group relative">
-                {/* 
-              ${
+              <div
+                key={chat.id}
+                className={`flex items-center group relative text-white rounded-lg pl-1 ${
                   selectedConversation?.id === chat.id
-                    ? 'bg-gray-200 dark:bg-gray-800'
-                    : 'hover:bg-gray-100 dark:hover:bg-gray-800'
-                }  */}
+                    ? 'bg-gray-800/80'
+                    : 'hover:bg-gray-700/80 '
+                } `}
+              >
                 <Link
                   href={`/chat/${chat.id}`}
-                  className={`w-full flex items-center text-left px-3 py-2 text-sm rounded-md 
+                  className={`w-full overflow-hidden flex items-center text-left px-1 py-2 text-sm rounded-md
                 transition-colors`}
                   onClick={() => selectConversation(chat)}
                 >
@@ -125,11 +121,11 @@ export function AppSidebar() {
                 </Link>
                 <button
                   onClick={(e) => toggleMenu(chat.id, e)}
-                  className={`absolute right-2 p-1 rounded-md opacity-0 group-hover:opacity-100
+                  className={`p-1 rounded-md opacity-0 group-hover:opacity-100
                     ${
                       selectedConversation?.id === chat.id
-                        ? 'hover:bg-gray-300 dark:hover:bg-gray-700'
-                        : 'hover:bg-gray-200'
+                        ? 'hover:bg-gray-800'
+                        : 'hover:bg-gray-700'
                     }
                       transition-opacity`}
                 >
@@ -139,7 +135,7 @@ export function AppSidebar() {
                 {openMenuId === chat.id && (
                   <div
                     ref={menuRef}
-                    className="absolute right-[-80px] top-0 mt-1 w-36 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5 z-50"
+                    className="absolute z-10 right-[-80px] top-0 mt-1 w-36 rounded-md shadow-lg bg-white dark:bg-gray-800 ring-1 ring-black ring-opacity-5"
                   >
                     <div className="py-1">
                       <button
@@ -183,7 +179,7 @@ export function AppSidebar() {
       </SidebarFooter>
       {/* Delete Confirmation Dialog */}
       {deleteDialogOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
           <div className="bg-white dark:bg-gray-800 rounded-lg max-w-md w-full p-6 shadow-xl">
             <div className="mb-4">
               <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100">

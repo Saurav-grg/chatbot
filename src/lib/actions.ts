@@ -37,55 +37,55 @@ const PROVIDER_CONFIGS: Record<
   //   envKey: 'OPENAI_API_KEY'
   // }
 };
-export async function aiResponse(prompt: string, selectedModel: string) {
-  const session = await getServerSession(authOptions);
-  if (!session) {
-    return { error: 'unauthenticated!!!' };
-  }
-  const modelConfig = MODEL_CONFIGS[selectedModel];
-  if (!modelConfig) {
-    return { error: `Unknown model: ${selectedModel}` };
-    // console.error(`Unknown model: ${selectedModel}`);
-    // return;
-  }
-  const providerConfig = PROVIDER_CONFIGS[modelConfig.provider];
-  const apiKey = providerConfig.envKey;
-  if (!apiKey) {
-    return { error: `${providerConfig.envKey} is not defined` };
-  }
-  try {
-    const openai = new OpenAI({
-      apiKey: apiKey,
-      baseURL: providerConfig.baseURL,
-    });
-    const stream = await openai.chat.completions.create({
-      model: selectedModel,
-      messages: [{ role: 'user', content: prompt }],
-      stream: true,
-    });
-    const readableStream = new ReadableStream({
-      async start(controller) {
-        try {
-          for await (const chunk of stream) {
-            const content = chunk.choices[0]?.delta?.content || '';
-            if (content) {
-              controller.enqueue(new TextEncoder().encode(content));
-            }
-          }
-          controller.close();
-        } catch (error) {
-          controller.error(error);
-        }
-      },
-    });
-    return new Response(readableStream, {
-      headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-    });
-  } catch (error) {
-    console.error('Error generating AI response:', error);
-    return new Response('Failed to generate AI response', { status: 500 });
-  }
-}
+// export async function aiResponse(prompt: string, selectedModel: string) {
+//   const session = await getServerSession(authOptions);
+//   if (!session) {
+//     return { error: 'unauthenticated!!!' };
+//   }
+//   const modelConfig = MODEL_CONFIGS[selectedModel];
+//   if (!modelConfig) {
+//     return { error: `Unknown model: ${selectedModel}` };
+//     // console.error(`Unknown model: ${selectedModel}`);
+//     // return;
+//   }
+//   const providerConfig = PROVIDER_CONFIGS[modelConfig.provider];
+//   const apiKey = providerConfig.envKey;
+//   if (!apiKey) {
+//     return { error: `${providerConfig.envKey} is not defined` };
+//   }
+//   try {
+//     const openai = new OpenAI({
+//       apiKey: apiKey,
+//       baseURL: providerConfig.baseURL,
+//     });
+//     const stream = await openai.chat.completions.create({
+//       model: selectedModel,
+//       messages: [{ role: 'user', content: prompt }],
+//       stream: true,
+//     });
+//     const readableStream = new ReadableStream({
+//       async start(controller) {
+//         try {
+//           for await (const chunk of stream) {
+//             const content = chunk.choices[0]?.delta?.content || '';
+//             if (content) {
+//               controller.enqueue(new TextEncoder().encode(content));
+//             }
+//           }
+//           controller.close();
+//         } catch (error) {
+//           controller.error(error);
+//         }
+//       },
+//     });
+//     return new Response(readableStream, {
+//       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+//     });
+//   } catch (error) {
+//     console.error('Error generating AI response:', error);
+//     return new Response('Failed to generate AI response', { status: 500 });
+//   }
+// }
 
 export async function createConversation(
   title: string
@@ -167,7 +167,7 @@ export async function fetchUserConversations(): ServerActionResponse<
         updatedAt: 'desc',
       },
     });
-
+    // return {data: conversations}
     return {
       data: conversations.map((conversation) => ({
         ...conversation,

@@ -5,7 +5,7 @@ import {
   addMessageToConversation,
   fetchUserConversations,
   fetchConversationMessages,
-  aiResponse,
+  // aiResponse,
   deleteConversation,
 } from './actions';
 
@@ -115,7 +115,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
         conversations: response.data,
         isLoading: false,
       });
-      console.log(response.data);
+      // console.log(response.data);
     }
   },
   deleteUserConversation: async (conversationId: Conversation['id']) => {

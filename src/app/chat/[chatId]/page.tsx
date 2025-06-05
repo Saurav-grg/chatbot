@@ -9,9 +9,8 @@ import {
 import { useChatStore } from '@/lib/store';
 import { useSession } from 'next-auth/react';
 import { Textarea } from '@/components/ui/textarea';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import MarkdownRenderer from '@/components/mdRenderer';
-// import { ScrollArea } from '@radix-ui/react-scroll-area';
 import { Check, ChevronDown, SendHorizontal } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 
@@ -28,7 +27,6 @@ export default function Chats() {
     { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI' },
   ];
   const { data: session } = useSession();
-  // console.log(session);
   const {
     selectedConversation,
     sendMessage,
@@ -37,24 +35,34 @@ export default function Chats() {
     setModel,
     error,
   } = useChatStore();
-  // useEffect(() => {
 
-  // }, [selectedConversation, router]);
   if (!selectedConversation) {
     window.location.href = '/';
     return null; // or a loading spinner
   }
-  const [input, setInput] = useState('');
-  const handleSendMessage = async (text: string) => {
-    if (!text.trim()) return;
-    try {
-      await sendMessage(text);
-      setInput(''); // Clear input after sending
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const handleSendMessage = useCallback(
+    async (text: string) => {
+      if (!text.trim()) return;
+      try {
+        await sendMessage(text);
+      } catch (error) {
+        console.error('Error:', error);
+      }
+    },
+    [sendMessage]
+  );
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+      if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        if (textareaRef.current) {
+          handleSendMessage(textareaRef.current.value);
+        }
+      }
+    },
+    [handleSendMessage]
+  );
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
 
@@ -69,6 +77,11 @@ export default function Chats() {
       });
     }
   }, [selectedConversation?.messages]);
+  const handleButtonClick = useCallback(() => {
+    if (textareaRef.current) {
+      handleSendMessage(textareaRef.current.value);
+    }
+  }, [handleSendMessage]);
   // Function to adjust textarea height
   const adjustHeight = () => {
     const textarea = textareaRef.current;
@@ -144,20 +157,11 @@ export default function Chats() {
           <Textarea
             disabled={isLoading}
             ref={textareaRef}
-            value={input}
-            onChange={(e) => {
-              setInput(e.target.value);
-              adjustHeight(); // Adjust height on every change
-            }}
+            onChange={adjustHeight}
             placeholder="Type your message..."
-            className="min-h-[100px] bg-red-200 resize-none border-0 bg-transparent text-white placeholder:text-gray-400 
+            className="min-h-[100px] bg-red-200 resize-none border-0 bg-transparent text-white placeholder:text-gray-400
               focus-visible:ring-0 focus-visible:ring-offset-0"
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                handleSendMessage(input);
-              }
-            }}
+            onKeyDown={handleKeyDown}
           />
           <div className="flex items-center justify-between px-2 py-1 rounded-xl">
             <DropdownMenu>
@@ -181,11 +185,8 @@ export default function Chats() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <button>
-              <SendHorizontal
-                onClick={() => handleSendMessage(input)}
-                className="h-5 w-5 mr-2 text-white"
-              />
+            <button onClick={handleButtonClick}>
+              <SendHorizontal className="h-5 w-5 mr-2 text-white" />
             </button>
           </div>
         </div>
