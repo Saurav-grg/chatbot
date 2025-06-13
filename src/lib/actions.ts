@@ -2,18 +2,16 @@
 import {
   Message,
   Conversation,
-  ServerActionResponse,
   ModelProvider,
+  ServerActionResponse,
 } from '@/types';
-import { OpenAI } from 'openai';
 import { prisma } from './prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
-
 // Model config map
 const MODEL_CONFIGS: Record<string, { provider: ModelProvider }> = {
-  'gemini-1.5-flash': { provider: 'google' },
   'gemini-1.5-pro': { provider: 'google' },
+  'gemini-1.5-flash': { provider: 'google' },
   'open-codestral-mamba': { provider: 'mistral' },
   'mistral-small-latest': { provider: 'mistral' },
   // 'gpt-4o': { provider: 'openai' }
@@ -37,63 +35,13 @@ const PROVIDER_CONFIGS: Record<
   //   envKey: 'OPENAI_API_KEY'
   // }
 };
-// export async function aiResponse(prompt: string, selectedModel: string) {
-//   const session = await getServerSession(authOptions);
-//   if (!session) {
-//     return { error: 'unauthenticated!!!' };
-//   }
-//   const modelConfig = MODEL_CONFIGS[selectedModel];
-//   if (!modelConfig) {
-//     return { error: `Unknown model: ${selectedModel}` };
-//     // console.error(`Unknown model: ${selectedModel}`);
-//     // return;
-//   }
-//   const providerConfig = PROVIDER_CONFIGS[modelConfig.provider];
-//   const apiKey = providerConfig.envKey;
-//   if (!apiKey) {
-//     return { error: `${providerConfig.envKey} is not defined` };
-//   }
-//   try {
-//     const openai = new OpenAI({
-//       apiKey: apiKey,
-//       baseURL: providerConfig.baseURL,
-//     });
-//     const stream = await openai.chat.completions.create({
-//       model: selectedModel,
-//       messages: [{ role: 'user', content: prompt }],
-//       stream: true,
-//     });
-//     const readableStream = new ReadableStream({
-//       async start(controller) {
-//         try {
-//           for await (const chunk of stream) {
-//             const content = chunk.choices[0]?.delta?.content || '';
-//             if (content) {
-//               controller.enqueue(new TextEncoder().encode(content));
-//             }
-//           }
-//           controller.close();
-//         } catch (error) {
-//           controller.error(error);
-//         }
-//       },
-//     });
-//     return new Response(readableStream, {
-//       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
-//     });
-//   } catch (error) {
-//     console.error('Error generating AI response:', error);
-//     return new Response('Failed to generate AI response', { status: 500 });
-//   }
-// }
-
 export async function createConversation(
   title: string
 ): ServerActionResponse<Conversation> {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return { error: 'unauthenticated!!!' };
+      throw new Error('unauthenticated!! login first');
     }
     const conversation = (await prisma.conversation.create({
       data: {
@@ -108,7 +56,7 @@ export async function createConversation(
     return { data: conversation };
   } catch (error) {
     console.error('Error creating conversation:', error);
-    return { error: 'Failed to create conversation' };
+    throw error;
   }
 }
 export async function addMessageToConversation(
@@ -119,7 +67,7 @@ export async function addMessageToConversation(
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return { error: 'unauthenticated!!!' };
+      throw new Error('unauthenticated!! login first');
     }
     // Verify conversation belongs to user
     const conversation = await prisma.conversation.findFirst({
@@ -130,7 +78,7 @@ export async function addMessageToConversation(
     });
 
     if (!conversation) {
-      return { error: 'Conversation not found' };
+      throw new Error('Conversation not found or unauthorized');
     }
 
     const message = await prisma.message.create({
@@ -144,7 +92,7 @@ export async function addMessageToConversation(
     return { data: message };
   } catch (error) {
     console.error('Error adding message:', error);
-    return { error: 'Failed to add message' };
+    throw error;
   }
 }
 
@@ -154,7 +102,7 @@ export async function fetchUserConversations(): ServerActionResponse<
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return { error: 'unauthenticated!!!' };
+      throw new Error('unauthenticated!!! to fetch conversation');
     }
     const conversations = await prisma.conversation.findMany({
       where: {
@@ -176,7 +124,7 @@ export async function fetchUserConversations(): ServerActionResponse<
     };
   } catch (error) {
     console.error('Error fetching conversations:', error);
-    return { error: 'Failed to fetch conversations' };
+    throw error;
   }
 }
 
@@ -186,7 +134,7 @@ export async function fetchUserConversations(): ServerActionResponse<
 //   try {
 //     const session = await getServerSession(authOptions);
 //     if (!session) {
-//       return { error: 'unauthenticated!!!' };
+//       throw new Error('unauthenticated login first!!' );
 //     }
 //     const messages = await prisma.message.findMany({
 //       where: {
@@ -212,7 +160,7 @@ export async function fetchConversationMessages(
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return { error: 'unauthenticated!!!' };
+      throw new Error('unauthenticated!! login first');
     }
     const queryOptions = {
       where: {
@@ -242,14 +190,16 @@ export async function fetchConversationMessages(
     }
   } catch (error) {
     console.error('Error fetching messages:', error);
-    return { error: 'Failed to fetch messages' };
+    throw error;
   }
 }
-export async function deleteConversation(conversationId: string) {
+export async function deleteConversation(
+  conversationId: string
+): ServerActionResponse<Conversation['id']> {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
-      return { error: 'unauthenticated!!!' };
+      throw new Error('unauthenticated!! login first');
     }
     const conversationExists = await prisma.conversation.findFirst({
       where: {
@@ -258,16 +208,16 @@ export async function deleteConversation(conversationId: string) {
       },
     });
     if (!conversationExists) {
-      return { error: 'Conversation not found or unauthorized' };
+      throw new Error('Conversation not found or unauthorized');
     }
     const deletedConversation = await prisma.conversation.delete({
       where: {
         id: conversationId,
       },
     });
-    return { data: deletedConversation };
+    return { data: deletedConversation.id };
   } catch (error) {
     console.error('Error deleting conversations:', error);
-    return { error: 'Failed to delete conversations' };
+    throw error;
   }
 }

@@ -6,7 +6,6 @@ import { useState } from 'react';
 
 export default function AuthButton() {
   const { data: session, status } = useSession();
-  // console.log(session);
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
   if (status === 'loading') {
@@ -20,14 +19,20 @@ export default function AuthButton() {
           onClick={() => signIn('github')}
           className="rounded bg-black px-4 py-2 text-white hover:bg-gray-800"
         >
-          Sign In
+          Sign In with GitHub
+        </button>
+        <button
+          onClick={() => signIn('google')}
+          className="rounded bg-black px-4 py-2 text-white hover:bg-gray-800"
+        >
+          Sign In with Google
         </button>
       </div>
     );
   }
 
   return (
-    <div className="relative flex items-center gap-4">
+    <div className="relative flex items-center gap-4 text-white">
       <span>Welcome, {session?.user?.name}!</span>
       {!showSignOutConfirm ? (
         <button
