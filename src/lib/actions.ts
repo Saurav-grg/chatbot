@@ -109,19 +109,20 @@ export async function fetchUserConversations(): ServerActionResponse<
         userId: session?.user?.id,
       },
       include: {
-        messages: false,
+        messages: true,
       },
       orderBy: {
         updatedAt: 'desc',
       },
     });
-    // return {data: conversations}
-    return {
-      data: conversations.map((conversation) => ({
-        ...conversation,
-        messages: [],
-      })),
-    };
+    // console.log(conversations);
+    return { data: conversations };
+    // return {
+    //   data: conversations.map((conversation) => ({
+    //     ...conversation,
+    //     messages: [],
+    //   })),
+    // };
   } catch (error) {
     console.error('Error fetching conversations:', error);
     throw error;

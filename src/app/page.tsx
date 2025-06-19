@@ -1,3 +1,4 @@
+//app/page.tsx
 'use client';
 import { useChatStore } from '@/lib/store';
 import { useCallback, useRef, useState } from 'react';
@@ -6,11 +7,11 @@ import { useRouter } from 'next/navigation';
 
 export default function Home() {
   const {
-    selectedConversation,
+    getConversationById,
     sendMessage,
     isLoading,
     model,
-    setModel,
+    // setModel,
     error,
   } = useChatStore();
   const router = useRouter();
@@ -20,12 +21,9 @@ export default function Home() {
     async (text: string) => {
       if (!text.trim()) return;
       try {
-        await sendMessage(text);
-
-        const currentConversation =
-          useChatStore.getState().selectedConversation;
-        if (currentConversation?.id) {
-          router.push(`/chat/${currentConversation.id}`);
+        const conversationId = await sendMessage(text);
+        if (conversationId) {
+          router.push(`/chat/${conversationId}`);
         }
       } catch (error) {
         console.error('Error:', error);
@@ -84,11 +82,12 @@ export default function Home() {
           </div>
           <button
             onClick={handleButtonClick}
+            disabled={isLoading}
             className="w-full rounded-xl text-white bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 
             transition-colors mt-1 p-2 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <SendHorizontal className="h-5 w-5 mr-2" />
-            Start New Conversation
+            {isLoading ? 'Creating...' : 'Start New Conversation'}
           </button>
         </div>
       </div>

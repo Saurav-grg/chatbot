@@ -24,7 +24,7 @@
 // export function AppSidebar() {
 //   const {
 //     conversations,
-//     selectedConversation,
+//     selectedConversationId,
 //     // createNewConversation,
 //     selectConversation,
 //     loadUserConversations,
@@ -37,7 +37,7 @@
 //   const [openMenuId, setOpenMenuId] = useState<string | number | null>(null);
 //   const menuRef = useRef<HTMLDivElement>(null);
 //   const handleNewChat = () => {
-//     useChatStore.setState({ selectedConversation: null });
+//     useChatStore.setState({ selectedConversationId: null });
 //   };
 
 //   const handleDeleteClick = (
@@ -105,7 +105,7 @@
 //               <div
 //                 key={chat.id}
 //                 className={`flex items-center group relative text-white rounded-lg pl-1 ${
-//                   selectedConversation?.id === chat.id
+//                   selectedConversationId?.id === chat.id
 //                     ? 'bg-gray-800/80'
 //                     : 'hover:bg-gray-700/80 '
 //                 } `}
@@ -123,7 +123,7 @@
 //                   onClick={(e) => toggleMenu(chat.id, e)}
 //                   className={`p-1 rounded-md opacity-0 group-hover:opacity-100
 //                     ${
-//                       selectedConversation?.id === chat.id
+//                       selectedConversationId?.id === chat.id
 //                         ? 'hover:bg-gray-800'
 //                         : 'hover:bg-gray-700'
 //                     }
@@ -219,21 +219,24 @@ import {
 } from 'lucide-react';
 import { Separator } from './ui/separator';
 import Link from 'next/link';
+import { useRouter, useParams } from 'next/navigation';
 
 export function AppSidebar() {
   const {
     conversations,
-    selectedConversation,
     selectConversation,
     loadUserConversations,
     deleteUserConversation,
   } = useChatStore();
-
+  const router = useRouter();
+  const { chatId } = useParams();
+  const selectedConversationId = chatId ? chatId.toString() : null;
   const [openMenuId, setOpenMenuId] = useState<string | number | null>(null);
   const [deleteId, setDeleteId] = useState<string | number | null>(null);
 
   const handleNewChat = useCallback(() => {
-    useChatStore.setState({ selectedConversation: null });
+    // useChatStore.setState({ selectedConversationId: null });
+    router.push('/');
   }, []);
 
   const handleMenuToggle = useCallback(
@@ -299,7 +302,7 @@ export function AppSidebar() {
           </SidebarGroupLabel>
           <div className="space-y-2 pl-1 pt-1 pb-4">
             {conversations.map((chat) => {
-              const isSelected = selectedConversation?.id === chat.id;
+              const isSelected = selectedConversationId === chat.id;
               const isMenuOpen = openMenuId === chat.id;
 
               return (
@@ -312,7 +315,7 @@ export function AppSidebar() {
                   <Link
                     href={`/chat/${chat.id}`}
                     className="w-full overflow-hidden flex items-center text-left px-1 py-2 text-sm rounded-md transition-colors"
-                    onClick={() => selectConversation(chat)}
+                    onClick={() => selectConversation(chat.id)}
                   >
                     <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
                     <span className="truncate">{chat.title}</span>

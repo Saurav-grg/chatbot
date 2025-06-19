@@ -27,8 +27,8 @@ export interface AIModelConfig {
 // Store state types
 export interface ChatStoreState {
   conversations: Conversation[];
-  // selectedConversation: Conversation['id'] | null;
-  selectedConversation: Conversation | null;
+  // selectedConversationId: Conversation['id'] | null;
+  // selectedConversation: Conversation | null;
   model: string;
   isLoading: boolean;
   error: string | null;
