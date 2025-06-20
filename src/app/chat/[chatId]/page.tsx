@@ -26,22 +26,20 @@ export default function Chats() {
   const { data: session } = useSession();
   const params = useParams();
   const router = useRouter();
-  const {
-    sendMessage,
-    isLoading,
-    model,
-    setModel,
-    error,
-    conversations,
-    getConversationById,
-  } = useChatStore();
+  const { sendMessage, isLoading, model, setModel, error, conversations } =
+    useChatStore();
   const chatId = params.chatId as string;
   const currentConversation = conversations.find((c) => c.id === chatId);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!currentConversation) {
+      router.replace('/');
+    }
+  }, [currentConversation, router]);
+
   if (!currentConversation) {
-    window.location.href = '/';
     return null;
   }
   const handleSendMessage = useCallback(

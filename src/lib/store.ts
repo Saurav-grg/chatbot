@@ -7,7 +7,8 @@ import {
   fetchConversationMessages,
   deleteConversation,
 } from './actions';
-
+import { useRouter } from 'next/navigation';
+const router = useRouter();
 interface ChatStore extends ChatStoreState {
   selectConversation: (conversationId: Conversation['id']) => void;
   loadUserConversations: () => Promise<void>;
@@ -26,20 +27,9 @@ interface ChatStore extends ChatStoreState {
 export const useChatStore = create<ChatStore>((set, get) => ({
   // Initial state
   conversations: [],
-  // selectedConversationId: null,
   isLoading: false,
   error: null,
   model: 'gemini-1.5-flash',
-
-  // Helper to get the currently selected conversation
-  // getSelectedConversation: () => {
-  //   const state = get();
-  //   if (!state.selectedConversationId) return null;
-  //   return (
-  //     state.conversations.find((c) => c.id === state.selectedConversationId) ||
-  //     null
-  //   );
-  // },
   getConversationById: (id: string) => {
     const state = get();
     return state.conversations.find((c) => c.id === id) || null;
@@ -167,22 +157,21 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       // Helper: Ensure a conversation exists
       const ensureConversationExists = async (): Promise<Conversation> => {
         const state = get();
-        if (conversationId) {
-          const found = state.conversations.find(
-            (c) => c.id === conversationId
-          );
-          if (!found) throw new Error('Selected conversation not found');
-          return found;
+        // if no conversationId is provided, create a new conversation
+        if (!conversationId) {
+          const title = state.generateChatTitle(text);
+          const response = await createConversation(title);
+          if (response.error) throw new Error(response.error);
+          const newConversation = response.data!;
+          set((state) => ({
+            conversations: [newConversation, ...state.conversations],
+            selectedConversationId: newConversation.id,
+          }));
+          return newConversation;
         }
-        const title = state.generateChatTitle(text);
-        const response = await createConversation(title);
-        if (response.error) throw new Error(response.error);
-        const newConversation = response.data!;
-        set((state) => ({
-          conversations: [...state.conversations, newConversation],
-          selectedConversationId: newConversation.id,
-        }));
-        return newConversation;
+        const found = state.conversations.find((c) => c.id === conversationId);
+        if (!found) throw new Error('Selected conversation not found');
+        return found;
       };
 
       // Helper: Send user message

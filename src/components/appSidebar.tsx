@@ -223,9 +223,9 @@ import { useRouter, useParams } from 'next/navigation';
 
 export function AppSidebar() {
   const {
+    loadUserConversations,
     conversations,
     selectConversation,
-    loadUserConversations,
     deleteUserConversation,
   } = useChatStore();
   const router = useRouter();

@@ -1,7 +1,7 @@
 //app/page.tsx
 'use client';
 import { useChatStore } from '@/lib/store';
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useRef } from 'react';
 import { SendHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
@@ -21,15 +21,16 @@ export default function Home() {
     async (text: string) => {
       if (!text.trim()) return;
       try {
-        const conversationId = await sendMessage(text);
-        if (conversationId) {
-          router.push(`/chat/${conversationId}`);
-        }
+        // const conversationId =
+        await sendMessage(text);
+        // if (conversationId) {
+        //   router.push(`/chat/${conversationId}`);
+        // }
       } catch (error) {
         console.error('Error:', error);
       }
     },
-    [sendMessage, router]
+    [sendMessage]
   );
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
