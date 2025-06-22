@@ -4,7 +4,6 @@ import './globals.css';
 import { Providers } from './providers';
 import { Toaster } from 'react-hot-toast';
 import { SidebarTrigger } from '@/components/ui/sidebar';
-// import { AppSidebar } from '@/components/appSidebar';
 import ParticleField from '@/components/particleField';
 import { AppSidebar } from '@/components/appSidebar';
 const geistSans = Geist({

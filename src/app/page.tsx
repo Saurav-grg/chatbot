@@ -6,32 +6,38 @@ import { SendHorizontal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
 export default function Home() {
-  const {
-    getConversationById,
-    sendMessage,
-    isLoading,
-    model,
-    // setModel,
-    error,
-  } = useChatStore();
+  const { sendMessage, isLoading, error } = useChatStore();
   const router = useRouter();
   // const [input, setInput] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const handleSendMessage = useCallback(
-    async (text: string) => {
-      if (!text.trim()) return;
-      try {
-        // const conversationId =
-        await sendMessage(text);
-        // if (conversationId) {
-        //   router.push(`/chat/${conversationId}`);
-        // }
-      } catch (error) {
-        console.error('Error:', error);
+  // const handleSendMessage = useCallback(
+  //   async (text: string) => {
+  //     if (!text.trim()) return;
+  //     try {
+  //       const result = await sendMessage(text);
+  //       // Navigate immediately if it's a new conversation
+  //       if (result?.isNew) {
+  //         router.push(`/chat/${result.conversationId}`);
+  //       }
+  //     } catch (error) {
+  //       console.error('Error:', error);
+  //     }
+  //   },
+  //   [sendMessage, router]
+  // );
+  const handleSendMessage = async (text: string) => {
+    if (!text.trim()) return;
+    try {
+      const result = await sendMessage(text);
+      // Navigate immediately if it's a new conversation
+      if (result?.isNew) {
+        router.push(`/chat/${result.conversationId}`);
       }
-    },
-    [sendMessage]
-  );
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
+
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
       if (e.key === 'Enter' && !e.shiftKey) {

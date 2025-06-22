@@ -7,8 +7,7 @@ import {
   fetchConversationMessages,
   deleteConversation,
 } from './actions';
-import { useRouter } from 'next/navigation';
-const router = useRouter();
+// const router = useRouter();
 interface ChatStore extends ChatStoreState {
   selectConversation: (conversationId: Conversation['id']) => void;
   loadUserConversations: () => Promise<void>;
@@ -17,7 +16,7 @@ interface ChatStore extends ChatStoreState {
   sendMessage: (
     content: string,
     conversationId?: String
-  ) => Promise<string | null>;
+  ) => Promise<{ conversationId: string; isNew: boolean } | null>;
   deleteUserConversation: (conversationId: Conversation['id']) => Promise<void>;
   setModel: (model: string) => void;
   // Helper to get selected conversation
@@ -28,6 +27,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   // Initial state
   conversations: [],
   isLoading: false,
+  isStreaming: false,
   error: null,
   model: 'gemini-1.5-flash',
   getConversationById: (id: string) => {
@@ -152,10 +152,13 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   sendMessage: async (text, conversationId) => {
-    set({ isLoading: true, error: null });
+    set({ isLoading: true, isStreaming: true, error: null });
     try {
       // Helper: Ensure a conversation exists
-      const ensureConversationExists = async (): Promise<Conversation> => {
+      const ensureConversationExists = async (): Promise<{
+        conversation: Conversation;
+        isNew: boolean;
+      }> => {
         const state = get();
         // if no conversationId is provided, create a new conversation
         if (!conversationId) {
@@ -167,13 +170,12 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             conversations: [newConversation, ...state.conversations],
             selectedConversationId: newConversation.id,
           }));
-          return newConversation;
+          return { conversation: newConversation, isNew: true };
         }
         const found = state.conversations.find((c) => c.id === conversationId);
         if (!found) throw new Error('Selected conversation not found');
-        return found;
+        return { conversation: found, isNew: false };
       };
-
       // Helper: Send user message
       const sendUserMessage = async (conversation: Conversation) => {
         const response = await addMessageToConversation(
@@ -193,9 +195,9 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           ),
         }));
       };
-
       // Helper: Stream AI response
       const streamAIResponse = async (conversationId: string) => {
+        set({ isStreaming: false });
         const modelResponse = await fetch('/api/test', {
           method: 'POST',
           headers: {
@@ -309,19 +311,35 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       };
 
       // Execute the steps
-      const conversation = await ensureConversationExists();
-      await sendUserMessage(conversation);
-      const { aiMessageText, tempMessageId } = await streamAIResponse(
-        conversation.id
-      );
-      await saveAIMessage(conversation.id, aiMessageText, tempMessageId);
+      const { conversation, isNew } = await ensureConversationExists();
+      const result = {
+        conversationId: conversation.id,
+        isNew,
+      };
+      (async () => {
+        try {
+          await sendUserMessage(conversation);
+          const { aiMessageText, tempMessageId } = await streamAIResponse(
+            conversation.id
+          );
+          await saveAIMessage(conversation.id, aiMessageText, tempMessageId);
+        } catch (error) {
+          console.error('Background message processing error:', error);
+          set({
+            error: error instanceof Error ? error.message : String(error),
+          });
+        } finally {
+          set({ isLoading: false });
+        }
+      })();
 
-      return conversation.id; // Return the conversation ID for navigation
+      return result;
     } catch (error) {
-      set({ error: error instanceof Error ? error.message : String(error) });
+      set({
+        error: error instanceof Error ? error.message : String(error),
+        isLoading: false,
+      });
       return null;
-    } finally {
-      set({ isLoading: false });
     }
   },
 }));
