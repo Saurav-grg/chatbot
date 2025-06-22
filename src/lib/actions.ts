@@ -175,7 +175,7 @@ export async function fetchConversationMessages(
       },
     };
     if (limit) {
-      console.log('limit:' + limit);
+      // console.log('limit:' + limit);
       // Fetch the last 'limit' messages by ordering descending, then reverse for chronological order
       const recentMessages = await prisma.message.findMany({
         ...queryOptions,
