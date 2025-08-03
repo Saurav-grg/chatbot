@@ -20,9 +20,7 @@ export const authOptions: AuthOptions = {
     }),
   ],
   pages: {
-    signIn: '/auth', // Custom sign-in page (optional)
-    // signOut: '/auth/signout', // Custom sign-out page (optional)
-    // error: '/auth/error',     // Error page (optional)
+    signIn: '/auth',
   },
   callbacks: {
     async session({ session, token, user }) {

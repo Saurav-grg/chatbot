@@ -5,6 +5,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '../auth/[...nextauth]/route';
 import OpenAI from 'openai';
 import { fetchConversationMessages } from '@/lib/actions';
+
 export async function POST(request: NextRequest) {
   const session = await getServerSession(authOptions);
   if (!session) {

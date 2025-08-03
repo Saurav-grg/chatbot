@@ -115,14 +115,7 @@ export async function fetchUserConversations(): ServerActionResponse<
         updatedAt: 'desc',
       },
     });
-    // console.log(conversations);
     return { data: conversations };
-    // return {
-    //   data: conversations.map((conversation) => ({
-    //     ...conversation,
-    //     messages: [],
-    //   })),
-    // };
   } catch (error) {
     console.error('Error fetching conversations:', error);
     throw error;
