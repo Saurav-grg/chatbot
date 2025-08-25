@@ -13,7 +13,7 @@ interface MarkdownRendererProps {
 
 export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
   return (
-    <div className="markdown-renderer py-2 px-4">
+    <div className="markdown-renderer py-2 px-4 bg-black">
       <ReactMarkdown
         components={{
           h1: ({ node, ...props }) => (
@@ -102,7 +102,7 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
             <strong className="font-semibold text" {...props} />
           ),
           em: ({ node, ...props }) => (
-            <em className="italic text-gray-800" {...props} />
+            <em className="italic text-white font-serif" {...props} />
           ),
           hr: ({ node, ...props }) => (
             <hr className="my-6 border-gray-200" {...props} />

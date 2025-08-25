@@ -17,7 +17,7 @@ export interface Conversation {
   createdAt: Date;
   updatedAt: Date;
 }
-export type ModelProvider = 'google' | 'mistral';
+export type ModelProvider = 'google' | 'mistral' | 'groq';
 
 export interface AIModelConfig {
   name: string;
