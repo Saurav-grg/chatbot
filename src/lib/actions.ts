@@ -9,32 +9,6 @@ import { prisma } from './prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 // Model config map
-const MODEL_CONFIGS: Record<string, { provider: ModelProvider }> = {
-  'gemini-1.5-pro': { provider: 'google' },
-  'gemini-1.5-flash': { provider: 'google' },
-  'open-codestral-mamba': { provider: 'mistral' },
-  'mistral-small-latest': { provider: 'mistral' },
-  // 'gpt-4o': { provider: 'openai' }
-};
-
-// Provider config map
-const PROVIDER_CONFIGS: Record<
-  ModelProvider,
-  { baseURL: string; envKey: string }
-> = {
-  google: {
-    baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
-    envKey: process.env.GEMINI_API_KEY || '',
-  },
-  mistral: {
-    baseURL: 'https://api.mistral.ai/v1/',
-    envKey: process.env.MISTRAL_API_KEY || '',
-  },
-  // openai: {
-  //   baseURL: 'https://api.openai.com/v1/',
-  //   envKey: 'OPENAI_API_KEY'
-  // }
-};
 export async function createConversation(
   title: string
 ): ServerActionResponse<Conversation> {
