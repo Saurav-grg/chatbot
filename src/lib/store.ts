@@ -15,7 +15,7 @@ interface ChatStore extends ChatStoreState {
   // sendMessage: (content: string) => Promise<void>;
   sendMessage: (
     content: string,
-    conversationId?: String
+    conversationId?: string
   ) => Promise<{ conversationId: string; isNew: boolean } | null>;
   deleteUserConversation: (conversationId: Conversation['id']) => Promise<void>;
   setModel: (model: string) => void;

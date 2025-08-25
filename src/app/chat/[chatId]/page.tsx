@@ -5,9 +5,10 @@ import { useSession } from 'next-auth/react';
 import { Textarea } from '@/components/ui/textarea';
 import { ChangeEvent, useCallback, useEffect, useRef } from 'react';
 import MarkdownRenderer from '@/components/mdRenderer';
-import { SendHorizontal } from 'lucide-react';
+import { MousePointer, SendHorizontal } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useParams, useRouter } from 'next/navigation';
+import { Message, Session } from '@/types';
 
 // Constants
 const MODELS = [
@@ -173,8 +174,8 @@ export default function Chats() {
 // Separated Components (only 2 main ones)
 
 interface MessageBubbleProps {
-  message: any;
-  session: any;
+  message: Message;
+  session: Session | null;
   isLast: boolean;
   isStreaming: boolean;
   lastMessageRef: React.RefObject<HTMLDivElement | null>;

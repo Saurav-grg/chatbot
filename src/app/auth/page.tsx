@@ -4,7 +4,7 @@ import { useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 // import SignInForm from './signInForm';
 
-export default function page() {
+export default function Authpage() {
   const { data: session, status } = useSession();
   const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
   const searchParams = useSearchParams();

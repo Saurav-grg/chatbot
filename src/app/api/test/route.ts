@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       role: 'user' | 'assistant';
       content: string;
     };
-    let messagesForAI: MessageArr[] = formatMessageForAi(
+    const messagesForAI: MessageArr[] = formatMessageForAi(
       recentMessages.map((msg) => {
         const role = msg.sender === 'user' ? 'user' : 'assistant';
         return { role, content: msg.text };

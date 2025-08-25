@@ -1,10 +1,5 @@
 'use server';
-import {
-  Message,
-  Conversation,
-  ModelProvider,
-  ServerActionResponse,
-} from '@/types';
+import { Message, Conversation, ServerActionResponse } from '@/types';
 import { prisma } from './prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';

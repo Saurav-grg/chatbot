@@ -23,7 +23,7 @@ export const authOptions: AuthOptions = {
     signIn: '/auth',
   },
   callbacks: {
-    async session({ session, token, user }) {
+    async session({ session, user }) {
       return {
         ...session,
         user: {
@@ -32,7 +32,7 @@ export const authOptions: AuthOptions = {
         },
       };
     },
-    async jwt({ token, user }) {
+    async jwt({ token }) {
       return token;
     },
     // debug: process.env.NODE_ENV === 'development',

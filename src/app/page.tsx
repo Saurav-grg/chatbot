@@ -13,7 +13,7 @@ const MODELS = [
   { id: 'gemma2-9b-it', name: 'Gemma2 9B IT', provider: 'Groq' },
 ];
 export default function Home() {
-  const { sendMessage, isLoading, error, setModel, model } = useChatStore();
+  const { sendMessage, isLoading, setModel, model } = useChatStore();
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const handleSendMessage = async (text: string) => {
