@@ -8,7 +8,15 @@ export interface Message {
   sender: 'user' | 'bot';
   createdAt: Date;
 }
-
+export interface Session {
+  user: {
+    id: string;
+    name?: string | null;
+    email?: string | null;
+    image?: string | null;
+  };
+  expires: string;
+}
 export interface Conversation {
   id: string;
   userId: string;
