@@ -16,6 +16,7 @@ export async function POST(request: NextRequest) {
     'gemini-1.5-pro': { provider: 'google' },
     'open-codestral-mamba': { provider: 'mistral' },
     'mistral-small-latest': { provider: 'mistral' },
+    'gemma2-9b-it': { provider: 'groq' },
     // 'gpt-4o': { provider: 'openai' }
   };
 
@@ -31,6 +32,10 @@ export async function POST(request: NextRequest) {
     mistral: {
       baseURL: 'https://api.mistral.ai/v1/',
       envKey: process.env.MISTRAL_API_KEY || '',
+    },
+    groq: {
+      baseURL: 'https://api.groq.com/openai/v1/',
+      envKey: process.env.GROQ_API_KEY || '',
     },
     // openai: {
     //   baseURL: 'https://api.openai.com/v1/',

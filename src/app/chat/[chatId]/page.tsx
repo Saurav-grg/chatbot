@@ -16,6 +16,7 @@ const MODELS = [
   { id: 'open-codestral-mamba', name: 'Codestral Mamba', provider: 'Mistral' },
   { id: 'mistral-small-latest', name: 'Mistral Small', provider: 'Mistral' },
   { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI' },
+  { id: 'gemma2-9b-it', name: 'Gemma2 9B IT', provider: 'Groq' },
 ];
 
 const MAX_TEXTAREA_HEIGHT = 370;

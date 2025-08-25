@@ -55,7 +55,7 @@ export async function createConversation(
 
     return { data: conversation };
   } catch (error) {
-    console.error('Error creating conversation:', error);
+    // console.error('Error creating conversation:', error);
     throw error;
   }
 }
@@ -91,7 +91,7 @@ export async function addMessageToConversation(
 
     return { data: message };
   } catch (error) {
-    console.error('Error adding message:', error);
+    // console.error('Error adding message:', error);
     throw error;
   }
 }
@@ -117,7 +117,7 @@ export async function fetchUserConversations(): ServerActionResponse<
     });
     return { data: conversations };
   } catch (error) {
-    console.error('Error fetching conversations:', error);
+    // console.error('Error fetching conversations:', error);
     throw error;
   }
 }
@@ -143,7 +143,7 @@ export async function fetchUserConversations(): ServerActionResponse<
 //     });
 //     return { data: messages };
 //   } catch (error) {
-//     console.error('Error fetching messages:', error);
+// console.error('Error fetching messages:', error);
 //     return { error: 'Failed to fetch messages' };
 //   }
 // }
@@ -183,7 +183,7 @@ export async function fetchConversationMessages(
       return { data: messages };
     }
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    // console.error('Error fetching messages:', error);
     throw error;
   }
 }
@@ -211,7 +211,7 @@ export async function deleteConversation(
     });
     return { data: deletedConversation.id };
   } catch (error) {
-    console.error('Error deleting conversations:', error);
+    // console.error('Error deleting conversations:', error);
     throw error;
   }
 }
