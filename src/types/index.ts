@@ -40,13 +40,13 @@ export interface ChatStoreState {
   isStreaming: boolean;
   error: string | null;
 }
-export interface CodeProps {
-  node?: any;
-  inline?: boolean;
-  className?: string;
-  children?: React.ReactNode;
-  [key: string]: any;
-}
+// export interface CodeProps {
+//   node?: any;
+//   inline?: boolean;
+//   className?: string;
+//   children?: React.ReactNode;
+//   [key: string]: any;
+// }
 export interface ChatWindowProps {
   isSidebarOpen: boolean;
   toggleSidebar: () => void;

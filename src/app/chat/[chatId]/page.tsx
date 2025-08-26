@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { Textarea } from '@/components/ui/textarea';
 import { ChangeEvent, useCallback, useEffect, useRef } from 'react';
 import MarkdownRenderer from '@/components/mdRenderer';
-import { MousePointer, SendHorizontal } from 'lucide-react';
+import { SendHorizontal } from 'lucide-react';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useParams, useRouter } from 'next/navigation';
 import { Message, Session } from '@/types';

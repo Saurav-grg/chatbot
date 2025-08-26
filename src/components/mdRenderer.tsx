@@ -16,25 +16,25 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
     <div className="markdown-renderer py-2 px-4 bg-black">
       <ReactMarkdown
         components={{
-          h1: ({ node, ...props }) => (
+          h1: ({ ...props }) => (
             <h1
               className="text-2xl font-semibold mt-6 mb-4 text-white"
               {...props}
             />
           ),
-          h2: ({ node, ...props }) => (
+          h2: ({ ...props }) => (
             <h2 className="text-2xl font-semibold mt-6 mb-3 text" {...props} />
           ),
-          h3: ({ node, ...props }) => (
+          h3: ({ ...props }) => (
             <h3 className="text-xl font-semibold mt-5 mb-2 text" {...props} />
           ),
-          h4: ({ node, ...props }) => (
+          h4: ({ ...props }) => (
             <h4 className="text-lg font-semibold mt-4 mb-2 text" {...props} />
           ),
-          p: ({ node, ...props }) => (
+          p: ({ ...props }) => (
             <p className="my-4 text-gray-200 leading-relaxed" {...props} />
           ),
-          a: ({ node, ...props }) => (
+          a: ({ ...props }) => (
             <a
               className="text-blue-600 hover:text-blue-800 hover:underline transition-colors"
               target="_blank"
@@ -42,20 +42,20 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
               {...props}
             />
           ),
-          ul: ({ node, ...props }) => (
+          ul: ({ ...props }) => (
             <ul className="my-4 ml-6 list-disc text-gray-200" {...props} />
           ),
-          ol: ({ node, ...props }) => (
+          ol: ({ ...props }) => (
             <ol className="my-4 ml-6 list-decimal text-gray-200" {...props} />
           ),
-          li: ({ node, ...props }) => <li className="my-1" {...props} />,
-          blockquote: ({ node, ...props }) => (
+          li: ({ ...props }) => <li className="my-1" {...props} />,
+          blockquote: ({ ...props }) => (
             <blockquote
               className="border-l-4 border-gray-200 pl-4 py-1 my-4 text-gray-600 italic"
               {...props}
             />
           ),
-          code({ node, inline, className, children, ...props }) {
+          code({ inline, className, children, ...props }) {
             const match = /language-(\w+)/.exec(className || '');
 
             return !inline && match ? (
@@ -95,19 +95,19 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
               </code>
             );
           },
-          pre({ node, ...props }) {
+          pre({ ...props }) {
             return <div {...props} />;
           },
-          strong: ({ node, ...props }) => (
+          strong: ({ ...props }) => (
             <strong className="font-semibold text" {...props} />
           ),
-          em: ({ node, ...props }) => (
+          em: ({ ...props }) => (
             <em className="italic text-white font-serif" {...props} />
           ),
-          hr: ({ node, ...props }) => (
+          hr: ({ ...props }) => (
             <hr className="my-6 border-gray-200" {...props} />
           ),
-          table: ({ node, ...props }) => (
+          table: ({ ...props }) => (
             <div className="overflow-x-auto my-6">
               <table
                 className="min-w-full divide-y divide-gray-200"
@@ -115,22 +115,18 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
               />
             </div>
           ),
-          thead: ({ node, ...props }) => (
-            <thead className="bg-gray-50" {...props} />
-          ),
-          tbody: ({ node, ...props }) => (
+          thead: ({ ...props }) => <thead className="bg-gray-50" {...props} />,
+          tbody: ({ ...props }) => (
             <tbody className="divide-y divide-gray-200" {...props} />
           ),
-          tr: ({ node, ...props }) => (
-            <tr className="hover:bg-gray-50" {...props} />
-          ),
-          th: ({ node, ...props }) => (
+          tr: ({ ...props }) => <tr className="hover:bg-gray-50" {...props} />,
+          th: ({ ...props }) => (
             <th
               className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               {...props}
             />
           ),
-          td: ({ node, ...props }) => (
+          td: ({ ...props }) => (
             <td
               className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
               {...props}
