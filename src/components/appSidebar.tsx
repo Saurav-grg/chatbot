@@ -38,7 +38,7 @@ export function AppSidebar() {
   const handleNewChat = useCallback(() => {
     // useChatStore.setState({ selectedConversationId: null });
     router.push('/');
-  }, []);
+  }, [router]);
 
   const handleMenuToggle = useCallback(
     (id: string | number, e: React.MouseEvent) => {

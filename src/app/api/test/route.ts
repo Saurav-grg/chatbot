@@ -2,7 +2,7 @@
 import { NextRequest } from 'next/server';
 import { ModelProvider } from '@/types';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '../auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 import OpenAI from 'openai';
 import { fetchConversationMessages } from '@/lib/actions';
 

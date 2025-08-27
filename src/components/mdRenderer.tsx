@@ -1,8 +1,7 @@
 'use client';
 import ReactMarkdown from 'react-markdown';
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
-// import { cn } from '@/lib/utils';
-import { oneLight } from 'react-syntax-highlighter/dist/esm/styles/prism';
+import { oneDark } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import { Copy } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -55,12 +54,12 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
               {...props}
             />
           ),
-          code({ inline, className, children, ...props }) {
+          code({ className, children, ...props }) {
+            // const { children, className } = props;
             const match = /language-(\w+)/.exec(className || '');
-
-            return !inline && match ? (
+            return match ? (
               <div className="my-4 rounded-lg overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 text-sm font-mono border-b border-gray-200 flex items-center justify-between">
+                <div className="bg-gray-700 px-4 py-2 text-sm font-mono  flex items-center justify-between">
                   <div>{match[1]}</div>
                   <button
                     className="flex items-center gap-1 text-gray-600 hover:text-gray-800 hover:bg-white px-2 py-1 rounded"
@@ -75,13 +74,19 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
                 </div>
                 <SyntaxHighlighter
                   language={match[1]}
-                  style={oneLight}
-                  customStyle={{
-                    margin: 0,
-                    borderRadius: '0 0 0.5rem 0.5rem',
-                    padding: '1rem',
-                  }}
-                  {...props}
+                  style={oneDark}
+                  // customStyle={{
+                  //   margin: 0,
+                  //   borderRadius: '0 0 0.5rem 0.5rem',
+                  //   padding: '1rem',
+                  // }}
+                  // customStyle={{
+                  //   margin: 0,
+                  //   borderRadius: '0 0 0.5rem 0.5rem',
+                  //   padding: '1rem',
+                  //   backgroundColor: '#f8f9fa',
+                  // }}
+                  PreTag={'div'}
                 >
                   {String(children).replace(/\n$/, '')}
                 </SyntaxHighlighter>
@@ -95,9 +100,9 @@ export default function MarkdownRenderer({ content }: MarkdownRendererProps) {
               </code>
             );
           },
-          pre({ ...props }) {
-            return <div {...props} />;
-          },
+          // pre({ ...props }) {
+          //   return <div {...props} />;
+          // },
           strong: ({ ...props }) => (
             <strong className="font-semibold text" {...props} />
           ),

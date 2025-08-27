@@ -2,7 +2,7 @@
 import { Message, Conversation, ServerActionResponse } from '@/types';
 import { prisma } from './prisma';
 import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
+import { authOptions } from '@/lib/auth';
 // Model config map
 export async function createConversation(
   title: string

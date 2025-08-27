@@ -1,6 +1,20 @@
 // types/next-auth.d.ts
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { type DefaultSession } from 'next-auth';
+// import NextAuth from 'next-auth';
+// declare module 'next-auth' {
+//   interface Session {
+//     user: {
+//       id: string;
+//       name?: string | null;
+//       email?: string | null;
+//       image?: string | null;
+//     };
+//     expires: string;
+//   }
+// }
+// types/next-auth.d.ts
+import 'next-auth';
+import 'next-auth/jwt';
+
 declare module 'next-auth' {
   interface Session {
     user: {
@@ -9,6 +23,11 @@ declare module 'next-auth' {
       email?: string | null;
       image?: string | null;
     };
-    expires: string;
+  }
+}
+
+declare module 'next-auth/jwt' {
+  interface JWT {
+    sub: string;
   }
 }

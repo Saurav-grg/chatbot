@@ -16,18 +16,21 @@ export default function Home() {
   const { sendMessage, isLoading, setModel, model } = useChatStore();
   const router = useRouter();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const handleSendMessage = async (text: string) => {
-    if (!text.trim()) return;
-    try {
-      const result = await sendMessage(text);
-      // Navigate immediately if it's a new conversation
-      if (result?.isNew) {
-        router.push(`/chat/${result.conversationId}`);
+  const handleSendMessage = useCallback(
+    async (text: string) => {
+      if (!text.trim()) return;
+      try {
+        const result = await sendMessage(text);
+        // Navigate immediately if it's a new conversation
+        if (result?.isNew) {
+          router.push(`/chat/${result.conversationId}`);
+        }
+      } catch (error) {
+        console.error('Error:', error);
       }
-    } catch (error) {
-      console.error('Error:', error);
-    }
-  };
+    },
+    [sendMessage, router]
+  );
   const handleModelChange = useCallback(
     (e: ChangeEvent<HTMLSelectElement>) => {
       setModel(e.target.value);
