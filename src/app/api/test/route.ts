@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
     },
   };
   const body = await request.json();
-  const { prompt, selectedModel, conversationId } = body;
+  const { selectedModel, conversationId } = body;
   if (!conversationId) {
     return new Response('conversationId is required', { status: 400 });
   }
@@ -122,7 +122,7 @@ export async function POST(request: NextRequest) {
     return new Response(readableStream, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error generating AI response:', error);
      return new Response('Failed to generate AI response', { status: 500 });
 
