@@ -12,7 +12,6 @@ interface ChatStore extends ChatStoreState {
   selectConversation: (conversationId: Conversation['id']) => void;
   loadUserConversations: () => Promise<void>;
   generateChatTitle: (text: string) => string;
-  // sendMessage: (content: string) => Promise<void>;
   sendMessage: (
     content: string,
     conversationId?: string
@@ -27,9 +26,10 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   // Initial state
   conversations: [],
   isLoading: false,
+  isFetching: false,
   isStreaming: false,
   error: null,
-  model: 'gemini-1.5-flash',
+  model: 'gemini-2.0-flash',
   getConversationById: (id: string) => {
     const state = get();
     return state.conversations.find((c) => c.id === id) || null;
@@ -110,19 +110,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   },
 
   loadUserConversations: async () => {
-    set({ isLoading: true, error: null });
+    set({ isFetching: true, error: null });
 
     const response = await fetchUserConversations();
 
     if (response.error) {
-      set({ error: response.error, isLoading: false });
+      set({ error: response.error, isFetching: false });
       return;
     }
 
     if (response.data) {
       set({
         conversations: response.data,
-        isLoading: false,
+        isFetching: false,
       });
     }
   },
@@ -204,7 +204,6 @@ export const useChatStore = create<ChatStore>((set, get) => ({
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
-            prompt: text,
             selectedModel: get().model,
             conversationId,
           }),

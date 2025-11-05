@@ -12,20 +12,22 @@ export async function POST(request: NextRequest) {
     return new Response('Unauthorized', { status: 401 });
   }
   const MODEL_CONFIGS: Record<string, { provider: ModelProvider }> = {
-    'gemini-1.5-flash': { provider: 'google' },
+    'gemini-2.0-flash': { provider: 'google' },
     'gemini-1.5-pro': { provider: 'google' },
     'open-codestral-mamba': { provider: 'mistral' },
     'mistral-small-latest': { provider: 'mistral' },
-    'gemma2-9b-it': { provider: 'groq' },
+    'groq/compound': { provider: 'groq' },
+    'llama-3.1-8b-instant': { provider: 'groq' },
+    'openai/gpt-oss-120b': { provider: 'groq' },
+    'qwen/qwen3-32b': { provider: 'groq' },
+    'whisper-large-v3': { provider: 'groq' },
     // 'gpt-4o': { provider: 'openai' }
   };
 
   // Provider config map
-  const PROVIDER_CONFIGS: Record<
-    ModelProvider,
-    { baseURL: string; envKey: string }
-  > = {
+  const PROVIDER_CONFIGS: Record<ModelProvider,{ baseURL: string; envKey: string }> = {
     google: {
+    //  baseURL: 'https://api.google.com/v1/', 
       baseURL: 'https://generativelanguage.googleapis.com/v1beta/openai/',
       envKey: process.env.GEMINI_API_KEY || '',
     },
@@ -37,10 +39,6 @@ export async function POST(request: NextRequest) {
       baseURL: 'https://api.groq.com/openai/v1/',
       envKey: process.env.GROQ_API_KEY || '',
     },
-    // openai: {
-    //   baseURL: 'https://api.openai.com/v1/',
-    //   envKey: 'OPENAI_API_KEY'
-    // }
   };
   const body = await request.json();
   const { prompt, selectedModel, conversationId } = body;
@@ -80,11 +78,26 @@ export async function POST(request: NextRequest) {
       })
     );
 
-    messagesForAI.push({ role: 'user', content: prompt });
+    // Ensure we have at least one user message
+    if (messagesForAI.length === 0) {
+      return new Response('No messages found in conversation', { status: 400 });
+    }
+
+    // messagesForAI.push({ role: 'user', content: prompt });
     const openai = new OpenAI({
       apiKey: apiKey,
       baseURL: providerConfig.baseURL,
     });
+    
+    // Log for debugging
+    console.log('Making API call:', {
+      provider: modelConfig.provider,
+      baseURL: providerConfig.baseURL,
+      model: selectedModel,
+      messageCount: messagesForAI.length,
+      messages: messagesForAI,
+    });
+    
     const stream = await openai.chat.completions.create({
       model: selectedModel,
       messages: messagesForAI,
@@ -95,6 +108,7 @@ export async function POST(request: NextRequest) {
         try {
           for await (const chunk of stream) {
             const content = chunk.choices[0]?.delta?.content || '';
+            // console.log(content);
             if (content) {
               controller.enqueue(new TextEncoder().encode(content));
             }
@@ -108,9 +122,10 @@ export async function POST(request: NextRequest) {
     return new Response(readableStream, {
       headers: { 'Content-Type': 'text/plain; charset=utf-8' },
     });
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error generating AI response:', error);
-    return new Response('Failed to generate AI response', { status: 500 });
+     return new Response('Failed to generate AI response', { status: 500 });
+
   }
 }
 //function
@@ -123,7 +138,6 @@ function formatMessageForAi(messages: MessageArr[]): MessageArr[] {
   if (messages.length === 0) {
     return [];
   }
-
   // Ensure the first message is from a user
   if (messages[0].role !== 'user') {
     formattedMessages.push({ role: 'user', content: 'Conversation started' });
@@ -132,23 +146,22 @@ function formatMessageForAi(messages: MessageArr[]): MessageArr[] {
       content: 'Hello! How can I assist you?',
     });
   }
-
   // Process each message
   for (let i = 0; i < messages.length; i++) {
     const currentMessage = messages[i];
-
-    // Add the current message to the formatted array
     formattedMessages.push(currentMessage);
-
-    // If the current message is from a user
-    if (currentMessage.role === 'user') {
-      // Check if there's a next message and if it's not an assistant
-      if (i === messages.length - 1 || messages[i + 1]?.role !== 'assistant') {
-        // Insert a default assistant message
-        formattedMessages.push({ role: 'assistant', content: 'no response' });
-      }
+    if (
+      currentMessage.role === 'user' &&
+      i < messages.length - 1 &&
+      messages[i + 1]?.role !== 'assistant'
+    ) {
+      formattedMessages.push({ role: 'assistant', content: 'no response' });
     }
+    // if (currentMessage.role === 'user') {
+    //   if (i === messages.length - 1 || messages[i + 1]?.role !== 'assistant') {
+    //     formattedMessages.push({ role: 'assistant', content: 'no response' });
+    //   }
+    // }
   }
-
   return formattedMessages;
 }

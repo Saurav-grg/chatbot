@@ -11,13 +11,21 @@ import { useParams, useRouter } from 'next/navigation';
 import { Message, Session } from '@/types';
 
 // Constants
+// const MODELS = [
+//   { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google' },
+//   { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google' },
+//   { id: 'open-codestral-mamba', name: 'Codestral Mamba', provider: 'Mistral' },
+//   { id: 'mistral-small-latest', name: 'Mistral Small', provider: 'Mistral' },
+//   { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI' },
+//   { id: 'gemma2-9b-it', name: 'Gemma2 9B IT', provider: 'Groq' },
+// ];
 const MODELS = [
-  { id: 'gemini-1.5-flash', name: 'Gemini 1.5 Flash', provider: 'Google' },
-  { id: 'gemini-1.5-pro', name: 'Gemini 1.5 Pro', provider: 'Google' },
-  { id: 'open-codestral-mamba', name: 'Codestral Mamba', provider: 'Mistral' },
-  { id: 'mistral-small-latest', name: 'Mistral Small', provider: 'Mistral' },
-  { id: 'gpt-4o', name: 'GPT-4o', provider: 'OpenAI' },
-  { id: 'gemma2-9b-it', name: 'Gemma2 9B IT', provider: 'Groq' },
+   { id: 'gemini-2.0-flash', name: 'Gemini Flash', provider: 'Google' },
+  { id: 'groq/compound', name: 'Groq Compound' },
+  { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B Instant' },
+  { id: 'openai/gpt-oss-120b', name: 'OpenAI GPT-OSS 120B' },
+  { id: 'qwen/qwen3-32b', name: 'Qwen 3.32B' },
+  { id: 'whisper-large-v3', name: 'Whisper Large V3' },
 ];
 
 const MAX_TEXTAREA_HEIGHT = 370;

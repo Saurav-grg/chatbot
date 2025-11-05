@@ -37,6 +37,7 @@ export interface ChatStoreState {
   conversations: Conversation[];
   model: string;
   isLoading: boolean;
+  isFetching: boolean;
   isStreaming: boolean;
   error: string | null;
 }
