@@ -7,7 +7,6 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
 } from '@/components/ui/sidebar';
-import { useChatStore } from '@/lib/store';
 import { useCallback, useEffect, useState } from 'react';
 import toast from 'react-hot-toast';
 import { Button } from './ui/button';
@@ -21,27 +20,24 @@ import {
 import { Separator } from './ui/separator';
 import Link from 'next/link';
 import { useRouter, useParams } from 'next/navigation';
+import { useConversations } from '@/hooks/queries/useConversations';
+import { useDeleteConversation } from '@/hooks/mutations/useDeleteConversation';
 
 export function AppSidebar() {
-  const {
-    loadUserConversations,
-    conversations,
-    selectConversation,
-    deleteUserConversation,
-  } = useChatStore();
+  const { data: conversations = [] } = useConversations();
+  const { mutate: deleteConversation } = useDeleteConversation();
   const router = useRouter();
   const { chatId } = useParams();
   const selectedConversationId = chatId ? chatId.toString() : null;
-  const [openMenuId, setOpenMenuId] = useState<string | number | null>(null);
-  const [deleteId, setDeleteId] = useState<string | number | null>(null);
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const handleNewChat = useCallback(() => {
-    // useChatStore.setState({ selectedConversationId: null });
     router.push('/');
   }, [router]);
 
   const handleMenuToggle = useCallback(
-    (id: string | number, e: React.MouseEvent) => {
+    (id: string, e: React.MouseEvent) => {
       e.stopPropagation();
       setOpenMenuId((prev) => (prev === id ? null : id));
     },
@@ -49,7 +45,7 @@ export function AppSidebar() {
   );
 
   const handleDeleteClick = useCallback(
-    (id: string | number, e: React.MouseEvent) => {
+    (id: string, e: React.MouseEvent) => {
       e.stopPropagation();
       setDeleteId(id);
       setOpenMenuId(null);
@@ -59,14 +55,20 @@ export function AppSidebar() {
 
   const confirmDelete = useCallback(() => {
     if (deleteId) {
-      deleteUserConversation(deleteId.toString());
-      setDeleteId(null);
+      deleteConversation(deleteId, {
+        onSuccess: () => {
+          toast.success('Conversation deleted');
+          setDeleteId(null);
+        },
+        onError: () => {
+          toast.error('Failed to delete conversation');
+        },
+      });
     }
-  }, [deleteId, deleteUserConversation]);
+  }, [deleteId, deleteConversation]);
 
   const cancelDelete = useCallback(() => setDeleteId(null), []);
 
-  // Close menu on outside click
   useEffect(() => {
     if (!openMenuId) return;
 
@@ -75,20 +77,13 @@ export function AppSidebar() {
     return () => document.removeEventListener('click', handleClick);
   }, [openMenuId]);
 
-  // Load conversations once
-  useEffect(() => {
-    loadUserConversations()
-      .then(() => toast.success('Conversations loaded successfully'))
-      .catch(() => toast.error('Failed to load conversations'));
-  }, [loadUserConversations]);
-
   return (
     <Sidebar className="border-white/20 bg-black backdrop-blur-md text-white z-10">
       <SidebarHeader>
         <div className="px-2 pt-2">
           <Button
             onClick={handleNewChat}
-            className="w-full justify-start bg-gradient-to-br from-purple-600 to-blue-600"
+            className="w-full justify-start bg-gradient-to-br from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
           >
             <Plus className="mr-2 h-4 w-4" />
             New Chat
@@ -116,7 +111,6 @@ export function AppSidebar() {
                   <Link
                     href={`/chat/${chat.id}`}
                     className="w-full overflow-hidden flex items-center text-left px-1 py-2 text-sm rounded-md transition-colors"
-                    onClick={() => selectConversation(chat.id)}
                   >
                     <MessageSquare className="mr-2 h-4 w-4 flex-shrink-0" />
                     <span className="truncate">{chat.title}</span>

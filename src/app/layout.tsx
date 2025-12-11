@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import './globals.css';
 import { Providers } from './providers';
@@ -6,6 +6,7 @@ import { Toaster } from 'react-hot-toast';
 import { SidebarTrigger } from '@/components/ui/sidebar';
 import ParticleField from '@/components/particleField';
 import { AppSidebar } from '@/components/appSidebar';
+
 const geistSans = Geist({
   variable: '--font-geist-sans',
   subsets: ['latin'],
@@ -18,9 +19,47 @@ const geistMono = Geist_Mono({
   display: 'swap',
   preload: true,
 });
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 5,
+  userScalable: true,
+  themeColor: '#000000',
+  colorScheme: 'dark',
+};
+
 export const metadata: Metadata = {
-  title: 'chat-dex',
-  description: 'A chat app',
+  title: 'ChatDex - AI Chat Application',
+  description: 'A powerful multi-model AI chat application with support for Gemini, Mistral, Groq and more',
+  manifest: '/manifest.json',
+  icons: {
+    icon: '/icon-192.png',
+    apple: '/icon-192.png',
+  },
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'ChatDex',
+  },
+  formatDetection: {
+    telephone: false,
+  },
+  openGraph: {
+    type: 'website',
+    locale: 'en_US',
+    url: 'https://chatdex.app',
+    title: 'ChatDex - AI Chat Application',
+    description: 'A powerful multi-model AI chat application',
+    images: [
+      {
+        url: '/icon-512.png',
+        width: 512,
+        height: 512,
+        alt: 'ChatDex Logo',
+      },
+    ],
+  },
 };
 export default function RootLayout({
   children,
