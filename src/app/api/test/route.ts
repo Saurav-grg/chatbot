@@ -90,13 +90,13 @@ export async function POST(request: NextRequest) {
     });
     
     // Log for debugging
-    console.log('Making API call:', {
-      provider: modelConfig.provider,
-      baseURL: providerConfig.baseURL,
-      model: selectedModel,
-      messageCount: messagesForAI.length,
-      messages: messagesForAI,
-    });
+    // console.log('Making API call:', {
+    //   provider: modelConfig.provider,
+    //   baseURL: providerConfig.baseURL,
+    //   model: selectedModel,
+    //   messageCount: messagesForAI.length,
+    //   messages: messagesForAI,
+    // });
     
     const stream = await openai.chat.completions.create({
       model: selectedModel,
@@ -157,11 +157,6 @@ function formatMessageForAi(messages: MessageArr[]): MessageArr[] {
     ) {
       formattedMessages.push({ role: 'assistant', content: 'no response' });
     }
-    // if (currentMessage.role === 'user') {
-    //   if (i === messages.length - 1 || messages[i + 1]?.role !== 'assistant') {
-    //     formattedMessages.push({ role: 'assistant', content: 'no response' });
-    //   }
-    // }
   }
   return formattedMessages;
 }
