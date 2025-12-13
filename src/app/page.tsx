@@ -1,18 +1,18 @@
-'use client';
-import { useCreateConversation } from '@/hooks/mutations/useCreateConversation';
-import { useUIStore } from '@/lib/ui-store';
-import { generateChatTitle } from '@/lib/chat-helpers';
-import { ChangeEvent, useCallback, useRef } from 'react';
-import { SendHorizontal } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+"use client";
+import { useCreateConversation } from "@/hooks/mutations/useCreateConversation";
+import { useUIStore } from "@/lib/ui-store";
+import { generateChatTitle } from "@/lib/chat-helpers";
+import { ChangeEvent, useCallback, useRef } from "react";
+import { SendHorizontal } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 const MODELS = [
-  { id: 'gemini-2.0-flash', name: 'Gemini Flash', provider: 'Google' },
-  { id: 'groq/compound', name: 'Groq Compound' },
-  { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B' },
-  { id: 'openai/gpt-oss-120b', name: 'OpenAI GPT-OSS 120B' },
-  { id: 'qwen/qwen3-32b', name: 'Qwen 3.32B' },
-  { id: 'whisper-large-v3', name: 'Whisper Large V3' },
+  { id: "gemini-2.5-flash", name: "Gemini Flash", provider: "Google" },
+  { id: "groq/compound", name: "Groq Compound" },
+  { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B" },
+  { id: "openai/gpt-oss-120b", name: "OpenAI GPT-OSS 120B" },
+  { id: "qwen/qwen3-32b", name: "Qwen 3.32B" },
+  { id: "whisper-large-v3", name: "Whisper Large V3" },
 ];
 
 export default function Home() {
@@ -27,7 +27,9 @@ export default function Home() {
       const title = generateChatTitle(text);
       createConversation(title, {
         onSuccess: (conversation) => {
-          router.push(`/chat/${conversation.id}`);
+          router.push(
+            `/chat/${conversation.id}?query=${encodeURIComponent(text)}`
+          );
         },
       });
     },
@@ -43,11 +45,11 @@ export default function Home() {
 
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         if (textareaRef.current) {
           handleSendMessage(textareaRef.current.value);
-          textareaRef.current.value = '';
+          textareaRef.current.value = "";
         }
       }
     },
@@ -57,21 +59,23 @@ export default function Home() {
   const handleButtonClick = useCallback(() => {
     if (textareaRef.current) {
       handleSendMessage(textareaRef.current.value);
-      textareaRef.current.value = '';
+      textareaRef.current.value = "";
     }
   }, [handleSendMessage]);
 
   const adjustHeight = () => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
+      textarea.style.height = "auto";
       textarea.style.height = `${Math.min(textarea.scrollHeight, 370)}px`;
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center h-screen w-full text-white text-center px-4">
-      <h2 className="text-2xl sm:text-3xl font-bold mb-4">Welcome to the Chat</h2>
+      <h2 className="text-2xl sm:text-3xl font-bold mb-4">
+        Welcome to the Chat
+      </h2>
       <p className="text-base sm:text-lg text-muted-foreground mb-8 font-mono">
         Select a conversation or create a new one.
       </p>
@@ -105,7 +109,7 @@ export default function Home() {
           className="w-full rounded-xl text-white bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 transition-colors mt-2 p-2 flex items-center justify-center disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <SendHorizontal className="h-5 w-5 mr-2" />
-          {isPending ? 'Creating...' : 'Start New Conversation'}
+          {isPending ? "Creating..." : "Start New Conversation"}
         </button>
       </div>
     </div>

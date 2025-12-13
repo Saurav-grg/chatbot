@@ -1,4 +1,4 @@
-import { create } from 'zustand';
+import { create } from "zustand";
 
 interface UIStore {
   model: string;
@@ -8,7 +8,7 @@ interface UIStore {
 }
 
 export const useUIStore = create<UIStore>((set) => ({
-  model: 'gemini-2.0-flash',
+  model: "gemini-2.5-flash",
   isStreaming: false,
   setModel: (model) => set({ model }),
   setIsStreaming: (isStreaming) => set({ isStreaming }),
