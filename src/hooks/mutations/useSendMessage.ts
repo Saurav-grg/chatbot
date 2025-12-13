@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Message, Conversation } from "@/types";
-import { PerformanceMonitor } from "@/lib/performance-monitor";
 interface SendMessageParams {
   conversationId: string;
   text: string;
@@ -12,9 +11,6 @@ export function useSendMessage() {
 
   return useMutation({
     mutationFn: async ({ conversationId, text, model }: SendMessageParams) => {
-      const perf = new PerformanceMonitor(
-        `SendMessage-${conversationId.slice(0, 8)}`
-      );
       // 1. Send user message to backend
       const userMessageResponse = await fetch(
         `/api/conversations/${conversationId}/messages`,
@@ -24,7 +20,6 @@ export function useSendMessage() {
           body: JSON.stringify({ text, sender: "user" }),
         }
       );
-      perf.checkpoint(" fetch complete save user message");
       if (!userMessageResponse.ok) {
         throw new Error("Failed to send message");
       }
@@ -40,7 +35,6 @@ export function useSendMessage() {
           };
         }
       );
-      perf.checkpoint("User message added to UI");
       // 3. Create placeholder for AI message
       const placeholderAiMessage: Message = {
         id: "temp-" + Date.now(),
@@ -59,7 +53,6 @@ export function useSendMessage() {
           };
         }
       );
-      perf.checkpoint("AI placeholder created");
       // 4. Start streaming
       const streamResponse = await fetch("/api/chat/stream", {
         method: "POST",
@@ -98,7 +91,6 @@ export function useSendMessage() {
           }
         );
       }
-      perf.checkpoint(`Stream complete chunks, ${aiMessageText.length} chars)`);
       // 6. Save final AI message to backend
       const aiMessageResponse = await fetch(
         `/api/conversations/${conversationId}/messages`,
@@ -125,11 +117,7 @@ export function useSendMessage() {
           };
         }
       );
-      perf.checkpoint("Placeholder replaced with real message");
-
       // Show summary and warn if slow
-      perf.summary();
-      perf.warnIfSlow(3000);
       return { userMessage, aiMessage };
     },
     onError: (error, { conversationId }) => {

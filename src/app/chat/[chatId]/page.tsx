@@ -13,7 +13,7 @@ import { useSendMessage } from "@/hooks/mutations/useSendMessage";
 import { useUIStore } from "@/lib/ui-store";
 
 const MODELS = [
-  { id: "gemini-2.0-flash", name: "Gemini Flash", provider: "Google" },
+  { id: "gemini-2.5-flash", name: "Gemini Flash", provider: "Google" },
   { id: "groq/compound", name: "Groq Compound" },
   { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B" },
   { id: "openai/gpt-oss-120b", name: "OpenAI GPT-OSS 120B" },
@@ -47,16 +47,35 @@ export default function Chats() {
       !hasProcessedQuery.current
     ) {
       const text = searchParams?.get("query");
-      if (text) {
+      if (text && !isSendingMessage) {
         hasProcessedQuery.current = true;
-        handleSendMessage(text);
-
+        setIsStreaming(true);
+        sendMessage(
+          { conversationId: conversation.id, text, model },
+          {
+            onSuccess: () => {
+              setIsStreaming(false);
+            },
+            onError: () => {
+              setIsStreaming(false);
+            },
+          }
+        );
         // Clear the query param from URL
         const newUrl = window.location.pathname;
         router.replace(newUrl, { scroll: false });
       }
     }
-  }, [conversation, isLoadingConversation, searchParams]);
+  }, [
+    conversation,
+    isLoadingConversation,
+    searchParams,
+    isSendingMessage,
+    model,
+    sendMessage,
+    setIsStreaming,
+    router,
+  ]);
   useEffect(() => {
     if (!isLoadingConversation && !conversation) {
       router.replace("/");
@@ -205,7 +224,13 @@ function MessageBubble({
   lastMessageRef,
 }: MessageBubbleProps) {
   const isUser = message.sender === "user";
-  // const lastLoading = isStreaming && isLast;
+  const isPlaceholder = message.id.toString().startsWith("temp-");
+  const showLoading =
+    isLast &&
+    !isUser &&
+    isPlaceholder &&
+    isStreaming &&
+    message.text.length < 1;
   return (
     <div
       ref={isLast ? lastMessageRef : null}
@@ -235,15 +260,14 @@ function MessageBubble({
             )}
             <p className="break-words">{message.text}</p>
           </div>
+        ) : showLoading ? (
+          <div>
+            <div className="flex items-center justify-center w-full h-10">
+              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
+            </div>
+            <p className="text-gray-400 text-sm text-center">Thinking...</p>
+          </div>
         ) : (
-          //  lastLoading ? (
-          //   <div>
-          //     <div className="flex items-center justify-center w-full h-10">
-          //       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
-          //     </div>
-          //     <p className="text-gray-400 text-sm text-center">Thinking...</p>
-          //   </div>
-          // ) :
           <MarkdownRenderer content={message.text} />
         )}
       </div>

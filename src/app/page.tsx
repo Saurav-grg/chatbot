@@ -7,7 +7,7 @@ import { SendHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const MODELS = [
-  { id: "gemini-2.0-flash", name: "Gemini Flash", provider: "Google" },
+  { id: "gemini-2.5-flash", name: "Gemini Flash", provider: "Google" },
   { id: "groq/compound", name: "Groq Compound" },
   { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B" },
   { id: "openai/gpt-oss-120b", name: "OpenAI GPT-OSS 120B" },
