@@ -1,24 +1,24 @@
-'use client';
-import Image from 'next/image';
-import { useSession } from 'next-auth/react';
-import { Textarea } from '@/components/ui/textarea';
-import { ChangeEvent, useCallback, useEffect, useRef } from 'react';
-import MarkdownRenderer from '@/components/mdRenderer';
-import { SendHorizontal } from 'lucide-react';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { useParams, useRouter } from 'next/navigation';
-import { Message, Session } from '@/types';
-import { useConversation } from '@/hooks/queries/useConversation';
-import { useSendMessage } from '@/hooks/mutations/useSendMessage';
-import { useUIStore } from '@/lib/ui-store';
+"use client";
+import Image from "next/image";
+import { useSession } from "next-auth/react";
+import { Textarea } from "@/components/ui/textarea";
+import { ChangeEvent, useCallback, useEffect, useRef } from "react";
+import MarkdownRenderer from "@/components/mdRenderer";
+import { SendHorizontal } from "lucide-react";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
+import { Message, Session } from "@/types";
+import { useConversation } from "@/hooks/queries/useConversation";
+import { useSendMessage } from "@/hooks/mutations/useSendMessage";
+import { useUIStore } from "@/lib/ui-store";
 
 const MODELS = [
-  { id: 'gemini-2.0-flash', name: 'Gemini Flash', provider: 'Google' },
-  { id: 'groq/compound', name: 'Groq Compound' },
-  { id: 'llama-3.1-8b-instant', name: 'Llama 3.1 8B' },
-  { id: 'openai/gpt-oss-120b', name: 'OpenAI GPT-OSS 120B' },
-  { id: 'qwen/qwen3-32b', name: 'Qwen 3.32B' },
-  { id: 'whisper-large-v3', name: 'Whisper Large V3' },
+  { id: "gemini-2.0-flash", name: "Gemini Flash", provider: "Google" },
+  { id: "groq/compound", name: "Groq Compound" },
+  { id: "llama-3.1-8b-instant", name: "Llama 3.1 8B" },
+  { id: "openai/gpt-oss-120b", name: "OpenAI GPT-OSS 120B" },
+  { id: "qwen/qwen3-32b", name: "Qwen 3.32B" },
+  { id: "whisper-large-v3", name: "Whisper Large V3" },
 ];
 
 const MAX_TEXTAREA_HEIGHT = 370;
@@ -27,6 +27,7 @@ export default function Chats() {
   const { data: session } = useSession();
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const chatId = params.chatId as string;
 
   const { data: conversation, isLoading: isLoadingConversation } =
@@ -37,16 +38,34 @@ export default function Chats() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const lastMessageRef = useRef<HTMLDivElement>(null);
+  const hasProcessedQuery = useRef(false);
+  useEffect(() => {
+    if (
+      !isLoadingConversation &&
+      conversation &&
+      conversation.messages.length === 0 &&
+      !hasProcessedQuery.current
+    ) {
+      const text = searchParams?.get("query");
+      if (text) {
+        hasProcessedQuery.current = true;
+        handleSendMessage(text);
 
+        // Clear the query param from URL
+        const newUrl = window.location.pathname;
+        router.replace(newUrl, { scroll: false });
+      }
+    }
+  }, [conversation, isLoadingConversation, searchParams]);
   useEffect(() => {
     if (!isLoadingConversation && !conversation) {
-      router.replace('/');
+      router.replace("/");
     }
   }, [conversation, isLoadingConversation, router]);
 
   useEffect(() => {
     if (lastMessageRef.current) {
-      lastMessageRef.current.scrollIntoView({ behavior: 'smooth' });
+      lastMessageRef.current.scrollIntoView({ behavior: "smooth" });
     } else if (scrollAreaRef.current) {
       requestAnimationFrame(() => {
         if (scrollAreaRef.current) {
@@ -67,8 +86,8 @@ export default function Chats() {
           onSuccess: () => {
             setIsStreaming(false);
             if (textareaRef.current) {
-              textareaRef.current.value = '';
-              textareaRef.current.style.height = 'auto';
+              textareaRef.current.value = "";
+              textareaRef.current.style.height = "auto";
             }
           },
           onError: () => {
@@ -79,10 +98,15 @@ export default function Chats() {
     },
     [conversation, isSendingMessage, model, sendMessage, setIsStreaming]
   );
-
+  // if (conversation?.messages.length === 0) {
+  //   const text = searchParams.get("query");
+  //   if (text) {
+  //     handleSendMessage(text);
+  //   }
+  // }
   const handleKeyDown = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-      if (e.key === 'Enter' && !e.shiftKey) {
+      if (e.key === "Enter" && !e.shiftKey) {
         e.preventDefault();
         if (textareaRef.current) {
           handleSendMessage(textareaRef.current.value);
@@ -108,7 +132,7 @@ export default function Chats() {
   const adjustTextareaHeight = useCallback(() => {
     const textarea = textareaRef.current;
     if (textarea) {
-      textarea.style.height = 'auto';
+      textarea.style.height = "auto";
       textarea.style.height = `${Math.min(
         textarea.scrollHeight,
         MAX_TEXTAREA_HEIGHT
@@ -117,7 +141,11 @@ export default function Chats() {
   }, []);
 
   if (isLoadingConversation || !conversation) {
-    return <div className="flex items-center justify-center h-screen w-full text-white">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen w-full text-white">
+        Loading...
+      </div>
+    );
   }
 
   return (
@@ -128,7 +156,10 @@ export default function Chats() {
         </h2>
       </div>
 
-      <ScrollArea className="p-4 w-full sm:w-3/4 mx-auto flex-1" ref={scrollAreaRef}>
+      <ScrollArea
+        className="p-4 w-full sm:w-3/4 mx-auto flex-1"
+        ref={scrollAreaRef}
+      >
         <div className="space-y-8">
           {conversation.messages.map((message, index) => (
             <MessageBubble
@@ -173,18 +204,18 @@ function MessageBubble({
   isStreaming,
   lastMessageRef,
 }: MessageBubbleProps) {
-  const isUser = message.sender === 'user';
-  const lastLoading = isStreaming && isLast;
+  const isUser = message.sender === "user";
+  // const lastLoading = isStreaming && isLast;
   return (
     <div
       ref={isLast ? lastMessageRef : null}
-      className={`${isUser ? 'w-full sm:w-3/4 ml-auto' : 'w-full'}`}
+      className={`${isUser ? "w-full sm:w-3/4 ml-auto" : "w-full"}`}
     >
       <div
         className={`max-w-[95%] mx-auto ${
           isUser
-            ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-primary-foreground px-3 py-2 rounded-3xl'
-            : 'ring-1 ring-white/10 p-2 rounded-xl'
+            ? "bg-gradient-to-br from-blue-600 to-cyan-600 text-primary-foreground px-3 py-2 rounded-3xl"
+            : "ring-1 ring-white/10 p-2 rounded-xl"
         }`}
       >
         {isUser ? (
@@ -192,26 +223,27 @@ function MessageBubble({
             {session?.user?.image ? (
               <Image
                 src={session.user.image}
-                alt={session.user.name ?? 'User'}
+                alt={session.user.name ?? "User"}
                 width={40}
                 height={40}
                 className="rounded-full flex-shrink-0"
               />
             ) : (
               <div className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-300 text-gray-700 font-bold flex-shrink-0">
-                {session?.user?.name?.[0] ?? 'U'}
+                {session?.user?.name?.[0] ?? "U"}
               </div>
             )}
             <p className="break-words">{message.text}</p>
           </div>
-        ) : lastLoading ? (
-          <div>
-            <div className="flex items-center justify-center w-full h-10">
-              <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
-            </div>
-            <p className="text-gray-400 text-sm text-center">Thinking...</p>
-          </div>
         ) : (
+          //  lastLoading ? (
+          //   <div>
+          //     <div className="flex items-center justify-center w-full h-10">
+          //       <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-cyan-500"></div>
+          //     </div>
+          //     <p className="text-gray-400 text-sm text-center">Thinking...</p>
+          //   </div>
+          // ) :
           <MarkdownRenderer content={message.text} />
         )}
       </div>
