@@ -5,6 +5,7 @@ import { generateChatTitle } from "@/lib/chat-helpers";
 import { ChangeEvent, useCallback, useRef } from "react";
 import { SendHorizontal } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useQueryClient } from "@tanstack/react-query";
 
 const MODELS = [
   { id: "gemini-2.5-flash", name: "Gemini Flash", provider: "Google" },
@@ -20,20 +21,25 @@ export default function Home() {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const { model, setModel } = useUIStore();
   const { mutate: createConversation, isPending } = useCreateConversation();
-
+  const queryClient = useQueryClient();
   const handleSendMessage = useCallback(
     (text: string) => {
       if (!text.trim()) return;
       const title = generateChatTitle(text);
       createConversation(title, {
         onSuccess: (conversation) => {
+          queryClient.setQueryData(
+            ["conversation", conversation.id],
+            conversation
+          );
           router.push(
             `/chat/${conversation.id}?query=${encodeURIComponent(text)}`
+            // `/chat/${conversation.id}`
           );
         },
       });
     },
-    [createConversation, router]
+    [createConversation, router, queryClient]
   );
 
   const handleModelChange = useCallback(

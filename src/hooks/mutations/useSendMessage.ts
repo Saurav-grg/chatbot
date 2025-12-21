@@ -12,6 +12,23 @@ export function useSendMessage() {
   return useMutation({
     mutationFn: async ({ conversationId, text, model }: SendMessageParams) => {
       // 1. Send user message to backend
+      const optimisticUserMessage: Message = {
+        id: `temp-user-${Date.now()}`,
+        text,
+        sender: "user",
+        conversationId,
+        createdAt: new Date(),
+      };
+      queryClient.setQueryData<Conversation>(
+        ["conversations", conversationId],
+        (old) => {
+          if (!old) return old;
+          return {
+            ...old,
+            messages: [...old.messages, optimisticUserMessage],
+          };
+        }
+      );
       const userMessageResponse = await fetch(
         `/api/conversations/${conversationId}/messages`,
         {
@@ -31,7 +48,9 @@ export function useSendMessage() {
           if (!old) return old;
           return {
             ...old,
-            messages: [...old.messages, userMessage],
+            messages: old.messages.map((msg) =>
+              msg.id === optimisticUserMessage.id ? userMessage : msg
+            ),
           };
         }
       );
@@ -117,7 +136,6 @@ export function useSendMessage() {
           };
         }
       );
-      // Show summary and warn if slow
       return { userMessage, aiMessage };
     },
     onError: (error, { conversationId }) => {

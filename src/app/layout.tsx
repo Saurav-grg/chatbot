@@ -1,74 +1,82 @@
-import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
-import './globals.css';
-import { Providers } from './providers';
-import { Toaster } from 'react-hot-toast';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import ParticleField from '@/components/particleField';
-import { AppSidebar } from '@/components/appSidebar';
-
+import type { Metadata, Viewport } from "next";
+import { Geist, Geist_Mono } from "next/font/google";
+import "./globals.css";
+import { Providers } from "./providers";
+import { Toaster } from "react-hot-toast";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import ParticleField from "@/components/particleField";
+import { AppSidebar } from "@/components/appSidebar";
+import { queryClient } from "@/lib/query-client";
 const geistSans = Geist({
-  variable: '--font-geist-sans',
-  subsets: ['latin'],
-  display: 'swap',
+  variable: "--font-geist-sans",
+  subsets: ["latin"],
+  display: "swap",
   preload: true,
 });
 const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
-  subsets: ['latin'],
-  display: 'swap',
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
+  display: "swap",
   preload: true,
 });
 
 export const viewport: Viewport = {
-  width: 'device-width',
+  width: "device-width",
   initialScale: 1,
   maximumScale: 5,
   userScalable: true,
-  themeColor: '#000000',
-  colorScheme: 'dark',
+  themeColor: "#000000",
+  colorScheme: "dark",
 };
 
 export const metadata: Metadata = {
-  title: 'ChatDex - AI Chat Application',
-  description: 'A powerful multi-model AI chat application with support for Gemini, Mistral, Groq and more',
-  manifest: '/manifest.json',
+  title: "ChatDex - AI Chat Application",
+  description:
+    "A powerful multi-model AI chat application with support for Gemini, Mistral, Groq and more",
+  manifest: "/manifest.json",
   icons: {
-    icon: '/icon-192.png',
-    apple: '/icon-192.png',
+    icon: "/icon-192.png",
+    apple: "/icon-192.png",
   },
   appleWebApp: {
     capable: true,
-    statusBarStyle: 'black-translucent',
-    title: 'ChatDex',
+    statusBarStyle: "black-translucent",
+    title: "ChatDex",
   },
   formatDetection: {
     telephone: false,
   },
   openGraph: {
-    type: 'website',
-    locale: 'en_US',
-    url: 'https://chatdex.app',
-    title: 'ChatDex - AI Chat Application',
-    description: 'A powerful multi-model AI chat application',
+    type: "website",
+    locale: "en_US",
+    url: "https://chat-cablex.vercel.app",
+    title: "ChatDex - AI Chat Application",
+    description: "A powerful multi-model AI chat application",
     images: [
       {
-        url: '/icon-512.png',
+        url: "/icon-512.png",
         width: 512,
         height: 512,
-        alt: 'ChatDex Logo',
+        alt: "ChatDex Logo",
       },
     ],
   },
 };
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  await queryClient.prefetchQuery({
+    queryKey: ["conversations"],
+  });
   return (
     <html lang="en">
       <head>
+        <meta
+          name="google-site-verification"
+          content="APJ-ciVG74ohDzWiODirflql6JwSvRPRTRW5cYBit-M"
+        />
         {/* <script
           defer
           crossOrigin="anonymous"
@@ -92,12 +100,4 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
-{
-  /* <div className="absolute inset-0 -z-10">
-                  <div className="absolute top-1/4 -left-20 h-[300px] w-[300px] rounded-full bg-purple-500/30 blur-[100px]" />
-                  <div className="absolute bottom-1/4 -right-20 h-[400px] w-[400px] rounded-full bg-cyan-500/30 blur-[100px]" />
-                  <div className="absolute top-1/2 left-1/2 h-[200px] w-[200px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-pink-500/20 blur-[80px]" />
-                  {/*
-                </div> */
 }
