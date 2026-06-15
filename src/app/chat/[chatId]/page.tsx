@@ -59,7 +59,7 @@ export default function Chats() {
             onError: () => {
               setIsStreaming(false);
             },
-          }
+          },
         );
         // Clear the query param from URL
         const newUrl = window.location.pathname;
@@ -112,10 +112,10 @@ export default function Chats() {
           onError: () => {
             setIsStreaming(false);
           },
-        }
+        },
       );
     },
-    [conversation, isSendingMessage, model, sendMessage, setIsStreaming]
+    [conversation, isSendingMessage, model, sendMessage, setIsStreaming],
   );
   // if (conversation?.messages.length === 0) {
   //   const text = searchParams.get("query");
@@ -132,7 +132,7 @@ export default function Chats() {
         }
       }
     },
-    [handleSendMessage]
+    [handleSendMessage],
   );
 
   const handleSendClick = useCallback(() => {
@@ -145,7 +145,7 @@ export default function Chats() {
     (e: ChangeEvent<HTMLSelectElement>) => {
       setModel(e.target.value);
     },
-    [setModel]
+    [setModel],
   );
 
   const adjustTextareaHeight = useCallback(() => {
@@ -154,7 +154,7 @@ export default function Chats() {
       textarea.style.height = "auto";
       textarea.style.height = `${Math.min(
         textarea.scrollHeight,
-        MAX_TEXTAREA_HEIGHT
+        MAX_TEXTAREA_HEIGHT,
       )}px`;
     }
   }, []);

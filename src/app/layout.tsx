@@ -4,7 +4,8 @@ import "./globals.css";
 import { Providers } from "./providers";
 import { Toaster } from "react-hot-toast";
 import { SidebarTrigger } from "@/components/ui/sidebar";
-import ParticleField from "@/components/particleField";
+import { ChatTabs } from "@/components/chatTabs";
+import { SidebarManager } from "@/components/sidebarManager";
 import { AppSidebar } from "@/components/appSidebar";
 import { queryClient } from "@/lib/query-client";
 const geistSans = Geist({
@@ -77,22 +78,17 @@ export default async function RootLayout({
           name="google-site-verification"
           content="APJ-ciVG74ohDzWiODirflql6JwSvRPRTRW5cYBit-M"
         />
-        {/* <script
-          defer
-          crossOrigin="anonymous"
-          src="https://unpkg.com/react-scan/dist/auto.global.js"
-        /> */}
       </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
           <AppSidebar />
+          <SidebarManager />
           <main className="w-full relative overflow-hidden z-0">
             <SidebarTrigger className="absolute top-[20px] text-white/60 hover:scale-105 hover:text-white/90 left-2" />
+            <ChatTabs />
             <div className="absolute inset-0 bg-black -z-20" />
-
-            <ParticleField />
             {children}
           </main>
         </Providers>
